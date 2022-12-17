@@ -9,7 +9,7 @@ This project aims to supported all features of the [Kafka Connect REST API](http
 ## Install
 
 ```bash
-pip install kakfa-connect-py
+pip install kafka-connect-py
 ```
 
 ## Command Line Usage
