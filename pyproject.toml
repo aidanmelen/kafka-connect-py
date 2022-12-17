@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "kafka-connect"
+name = "kafka-connect-py"
 version = "0.1.0"
 description = "A client for the Confluent Platform Kafka Connect REST API."
 authors = ["Aidan Melen <aidan-melen@protonmail.com>"]
@@ -15,10 +15,8 @@ click = "^8.1.3"
 mock = "^4.0.3"
 
 [tool.poetry.scripts]
-kafka-connect = "kafka_connect.cli:cli"
-kafkacon = "kafka_connect.cli:cli"
-kcon = "kafka_connect.cli:cli"
 kc = "kafka_connect.cli:cli"
+kafka-connect = "kafka_connect.cli:cli"
 
 [build-system]
 requires = ["poetry-core"]
