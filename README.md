@@ -1,8 +1,6 @@
 # Kafka Connect Python
 
-The KafkaConnect class is a client for the Confluent Platform Kafka Connect REST API. 
-
-The Kafka Connect REST API allows you to manage connectors that move data between Apache Kafka and other systems. The KafkaConnect class provides methods for getting information about the Kafka Connect cluster and its connectors, creating new connectors, updating existing connectors, and deleting connectors.
+The Kafka Connect REST API allows you to manage connectors that move data between Apache Kafka and other systems.` The `kc` command line tool provides commands for getting information about the Kafka Connect cluster and its connectors, creating new connectors, updating existing connectors, deleting connectors, etc.
 
 This module aims to supported all features of the [Kafka Connect REST API](https://docs.confluent.io/platform/current/connect/references/restapi.html#kconnect-rest-interface).
 
@@ -12,7 +10,7 @@ This module aims to supported all features of the [Kafka Connect REST API](https
 pip install kakfa-connect-py
 ```
 
-## Commandline Usage
+## Command Line Usage
 
 Retrieve the version and other details of the Kafka Connect cluster.
 
