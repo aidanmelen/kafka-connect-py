@@ -80,12 +80,6 @@ This command deletes a connector.
 $ kc delete-connector <connector>
 ```
 
-This command deletes the config of a connector.
-
-```bash
-$ kc delete-connector-config <connector>
-```
-
 This command validates the configuration specified in the given file. If the configuration is valid, this command will return a status code of 200.
 
 ```bash
