@@ -1,6 +1,6 @@
 # Kafka Connect Python
 
-The Kafka Connect REST API allows you to manage connectors that move data between Apache Kafka and other systems.` The `kc` command line tool provides commands for getting information about the Kafka Connect cluster and its connectors, creating new connectors, updating existing connectors, deleting connectors, etc.
+The Kafka Connect REST API allows you to manage connectors that move data between Apache Kafka and other systems. The `kc` command line tool provides commands for getting information about the Kafka Connect cluster and its connectors, creating new connectors, updating existing connectors, deleting connectors, etc.
 
 This module aims to supported all features of the [Kafka Connect REST API](https://docs.confluent.io/platform/current/connect/references/restapi.html#kconnect-rest-interface).
 
