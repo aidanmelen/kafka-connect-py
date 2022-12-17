@@ -6,93 +6,99 @@ The Kafka Connect REST API allows you to manage connectors that move data betwee
 
 This module aims to supported all features of the [Kafka Connect REST API](https://docs.confluent.io/platform/current/connect/references/restapi.html#kconnect-rest-interface).
 
-## Usage
+## Install
 
-This command retrieves the version and other details of the Kafka Connect cluster.
+```bash
+pip install kakfa-connect-py
+```
+
+## Commandline Usage
+
+Retrieve the version and other details of the Kafka Connect cluster.
 
 ```bash
 $ kc get-cluster
 ```
 
-This command retrieves the details of a single connector.
+Retrieve the details of a single connector.
 
 ```bash
 $ kc get-connector <connector>
 ```
 
-This command retrieves a list of active connectors. The `--expand' option can be used to retrieve additional information about the connectors, such as their status or metadata.
+Retrieve a list of active connectors. The `--expand' option can be used to retrieve additional information about the connectors, such as their status or metadata.
 
 ```bash
 $ kc get-connectors [--expand=status|info]
 ```
 
-This command creates a new connector using the configuration specified in the given file. If the connector already exists or a rebalance is in process, this command will return a status code of 409.
+Create a new connector using the configuration specified in the given file. If the connector already exists or a rebalance is in process, Wil return a status code of 409.
 
 ```bash
 $ kc create-connector <config_file>
 ```
 
-This command updates the configuration for an existing connector. If a rebalance is in process, this command will return a status code of 409.
+Update the configuration for an existing connector. If a rebalance is in process, Wil return a status code of 409.
 
 ```bash
 $ kc update-connector <connector> <config_file>
 ```
 
-This command retrieves the configuration of a connector.
+Retrieve the configuration of a connector.
 
 ```bash
 $ kc get-connector <connector>
 ```
 
-This command retrieves the config of a connector.
+Retrieve the config of a connector.
 
 ```bash
 $ kc get-connector-config <connector>
 ```
 
-This command retrieves the status of a connector.
+Retrieve the status of a connector.
 
 ```bash
 $ kc get-connector-status <connector>
 ```
 
-This command retrieves the tasks of a connector. The `--include-tasks' option can be used to include task information in the response.
+Retrieve the tasks of a connector. The `--include-tasks' option can be used to include task information in the response.
 
 ```bash
 $ kc get-connector-tasks <connector> [--include-tasks]
 ```
 
-This command pauses a connector.
+Pause a connector.
 
 ```bash
 $ kc pause-connector <connector>
 ```
 
-This command resumes a connector that was previously paused.
+Resume a connector that was previously paused.
 
 ```bash
 $ kc resume-connector <connector>
 ```
 
-This command deletes a connector.
+Delete a connector.
 
 ```bash
 $ kc delete-connector <connector>
 ```
 
-This command validates the configuration specified in the given file. If the configuration is valid, this command will return a status code of 200.
+Validate the configuration specified in the given file. If the configuration is valid, Wil return a status code of 200.
 
 ```bash
 $ kc validate-connector-config <config_file>
 ```
 
-This command retrieves metadata about the specified connector plugin.
+Retrieve metadata about the specified connector plugin.
 
 ```bash
 $ kc get-connector-plugin <connector>
 ```
 
-This command retrieves metadata about all available connector plugins.
+Retrieve metadata about all available connector plugins.
 
 ```bash
 $ kc get-connector-plugins
