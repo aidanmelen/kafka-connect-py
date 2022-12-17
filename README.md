@@ -20,7 +20,7 @@ This command retrieves the details of a single connector.
 $ kc get-connector <connector>
 ```
 
-This command retrieves a list of active connectors. The expand option is optional and can be used to retrieve additional information about the connectors, such as their status or metadata.
+This command retrieves a list of active connectors. The `--expand' option can be used to retrieve additional information about the connectors, such as their status or metadata.
 
 ```bash
 $ kc get-connectors [--expand=status|info]
@@ -56,7 +56,7 @@ This command retrieves the status of a connector.
 $ kc get-connector-status <connector>
 ```
 
-This command retrieves the tasks of a connector. The include-tasks option is optional and can be used to include task information in the response.
+This command retrieves the tasks of a connector. The `--include-tasks' option can be used to include task information in the response.
 
 ```bash
 $ kc get-connector-tasks <connector> [--include-tasks]
