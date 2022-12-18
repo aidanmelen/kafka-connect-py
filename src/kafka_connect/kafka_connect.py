@@ -10,11 +10,20 @@ class KafkaConnect():
     """A client for the Confluent Platform Kafka Connect REST API.
     Args:
         endpoint (str): The base URL for the Kafka Connect REST API.
+        auth (str): A colon-delimited string of `username` and `password` to use for authenticating with the Kafka Connect REST API.
         logger (logging.Logger): The logger to be used. If not specified, a new logger will be created.
     """
-    def __init__(self, endpoint="http://localhost:8083", logger=None):
+    def __init__(self, endpoint="http://localhost:8083", auth=None, logger=None):
         self.endpoint = endpoint
+        if auth:
+            if ':' not in auth:
+                raise ValueError("Invalid auth string. Expected a colon-delimited string of `username` and `password`.")
+            username, password = auth.split(':')
+            self.auth = (username.strip(), password.strip())
+        else:
+            self.auth = None
         self.logger = logger if logger else logging.getLogger()
+
 
     def get_cluster(self):
         """Get the version and other details of the Kafka Connect cluster.
@@ -23,8 +32,22 @@ class KafkaConnect():
         """
         self.logger.info("Getting cluster details")
         url = f"{self.endpoint}"
+        response = requests.get(url, auth=self.auth)
+        response.raise_for_status()
+        return response.json()
 
-        response = requests.get(url)
+    def list_connectors(self, expand=None):
+        """Get the list of active connectors.
+        Args:
+            expand (str): Optional parameter that retrieves additional information about the connectors.
+                Valid values are "status" and "info".
+        Returns:
+            List[str]: The list of connector names.
+        """
+        self.logger.info("Listing connectors")
+        url = f"{self.endpoint}/connectors"
+        params = {"expand": expand}
+        response = requests.get(url, params=params, auth=self.auth)
         response.raise_for_status()
         return response.json()
     
@@ -37,24 +60,7 @@ class KafkaConnect():
         """
         self.logger.info(f"Getting connector: {connector}")
         url = f"{self.endpoint}/connectors/{connector}"
-        response = requests.get(url)
-        response.raise_for_status()
-        return response.json()
-
-    def get_connectors(self, expand=None):
-        """Get a list of active connectors.
-        Args:
-            expand (str): Optional parameter that retrieves additional information about the connectors.
-                Valid values are "status" and "info".
-        Returns:
-            List[str]: The list of connector names.
-        """
-        self.logger.info("Getting connectors")
-        url = f"{self.endpoint}/connectors"
-        if expand:
-            url += f"?expand={expand}"
-
-        response = requests.get(url)
+        response = requests.get(url, auth=self.auth)
         response.raise_for_status()
         return response.json()
 
@@ -69,11 +75,14 @@ class KafkaConnect():
         """
         self.logger.info(f"Creating connector: {config.get('name')}")
         url = f"{self.endpoint}/connectors"
-        response = requests.post(url, headers={"Content-Type": "application/json"}, data=json.dumps(config))
-        response.raise_for_status()
+        headers = {"Content-Type": "application/json"}
+        response = requests.post(url, headers=headers, data=json.dumps(config), auth=self.auth)
+        
         if response.status_code == 409:
             # A rebalance is needed, forthcoming, or underway.
             self.logger.error("Connector already exists or rebalance is in process.")
+        
+        response.raise_for_status()
         return response.json()
 
     def update_connector(self, connector, config):
@@ -90,14 +99,16 @@ class KafkaConnect():
 
         self.logger.info(f"Updating connector: {connector}")
         url = f"{self.endpoint}/connectors/{connector}/config"
-        response = requests.put(url, headers={"Content-Type": "application/json"}, data=json.dumps(config))
-        response.raise_for_status()
+        response = requests.put(url, headers={"Content-Type": "application/json"}, data=json.dumps(config), auth=self.auth)
 
         if response.status_code == 409:
             # A rebalance is underway.
             self.logger.error("Connector rebalance is in process.")
         else:
             return response.json()
+
+        response.raise_for_status()
+        return response
 
     def get_connector_config(self, connector):
         """Get the configuration of a single connector.
@@ -108,7 +119,7 @@ class KafkaConnect():
         """
         self.logger.info(f"Getting connector config: {connector}")
         url = f"{self.endpoint}/connectors/{connector}/config"
-        response = requests.get(url)
+        response = requests.get(url, auth=self.auth)
         response.raise_for_status()
         return response.json()
 
@@ -121,7 +132,7 @@ class KafkaConnect():
         """
         self.logger.info(f"Getting connector status: {connector}")
         url = f"{self.endpoint}/connectors/{connector}/status"
-        response = requests.get(url)
+        response = requests.get(url, auth=self.auth)
         response.raise_for_status()
         return response.json()
 
@@ -138,8 +149,7 @@ class KafkaConnect():
         self.logger.info(f"Restarting connector: {connector}")
         url = f"{self.endpoint}/connectors/{connector}/restart"
         params = {"includeTasks": include_tasks, "onlyFailed": only_failed}
-        response = requests.post(url, params=params)
-        response.raise_for_status()
+        response = requests.post(url, params=params, auth=self.auth)
         
         if response.status_code == 200:
             # The connector was successfully restarted.
@@ -165,6 +175,9 @@ class KafkaConnect():
             # The request timed out.
             self.logger.error("Connector restart request timed out.")
             raise HTTPError(response.text)
+        
+        response.raise_for_status()
+        return response
 
     def pause_connector(self, connector):
         """Pause a single connector.
@@ -175,7 +188,7 @@ class KafkaConnect():
         """
         self.logger.info(f"Pausing connector: {connector}")
         url = f"{self.endpoint}/connectors/{connector}/pause"
-        response = requests.put(url)
+        response = requests.put(url, auth=self.auth)
         response.raise_for_status()
         return response.json()
 
@@ -188,7 +201,7 @@ class KafkaConnect():
         """
         self.logger.info(f"Resuming connector: {connector}")
         url = f"{self.endpoint}/connectors/{connector}/resume"
-        response = requests.put(url)
+        response = requests.put(url, auth=self.auth)
         response.raise_for_status()
         return response.json()
 
@@ -201,12 +214,12 @@ class KafkaConnect():
         """
         self.logger.info(f"Deleting connector: {connector}")
         url = f"{self.endpoint}/connectors/{connector}"
-        response = requests.delete(url)
+        response = requests.delete(url, auth=self.auth)
         response.raise_for_status()
         return response.json()
 
-    def get_connector_tasks(self, connector):
-        """Get a list of tasks for a connector.
+    def list_connector_tasks(self, connector):
+        """Get the list of tasks for a connector.
         Args:
             connector (str): The name of the connector.
         Returns:
@@ -214,7 +227,7 @@ class KafkaConnect():
         """
         self.logger.info(f"Getting tasks for connector: {connector}")
         url = f"{self.endpoint}/connectors/{connector}/tasks"
-        response = requests.get(url)
+        response = requests.get(url, auth=self.auth)
         response.raise_for_status()
         return response.json()
 
@@ -228,7 +241,7 @@ class KafkaConnect():
         """
         self.logger.info(f"Getting task status for connector: {connector} and task_id: {task_id}")
         url = f"{self.endpoint}/connectors/{connector}/tasks/{task_id}/status"
-        response = requests.get(url)
+        response = requests.get(url, auth=self.auth)
         response.raise_for_status()
         return response.json()
 
@@ -242,11 +255,11 @@ class KafkaConnect():
         """
         self.logger.info(f"Restarting task {task_id} of connector: {connector}")
         url = f"{self.endpoint}/connectors/{connector}/tasks/{task_id}/restart"
-        response = requests.post(url)
+        response = requests.post(url, auth=self.auth)
         response.raise_for_status()
         return response.json()
 
-    def get_connector_topics(self, connector):
+    def list_connector_topics(self, connector):
         """Get the list of topics for a connector.
         Args:
             connector (str): The name of the connector.
@@ -255,7 +268,7 @@ class KafkaConnect():
         """
         self.logger.info(f"Getting topics for connector: {connector}")
         url = f"{self.endpoint}/connectors/{connector}/topics"
-        response = requests.get(url)
+        response = requests.get(url, auth=self.auth)
         response.raise_for_status()
         return response.json()
 
@@ -268,11 +281,11 @@ class KafkaConnect():
         """
         self.logger.info(f"Resetting topics for connector: {connector}")
         url = f"{self.endpoint}/connectors/{connector}/topics/reset"
-        response = requests.put(url)
+        response = requests.put(url, auth=self.auth)
         response.raise_for_status()
         return response.json()
 
-    def get_connector_plugins(self):
+    def list_connector_plugins(self):
         """Get the list of connector plugins.
         Args:
         Returns:
@@ -280,7 +293,7 @@ class KafkaConnect():
         """
         self.logger.info("Getting connector plugins")
         url = f"{self.endpoint}/connector-plugins"
-        response = requests.get(url)
+        response = requests.get(url, auth=self.auth)
         response.raise_for_status()
         return response.json()
 
@@ -295,6 +308,6 @@ class KafkaConnect():
         self.logger.info(f"Validating config for plugin: {plugin}")
         url = f"{self.endpoint}/connector-plugins/{plugin}/config/validate"
         headers = {"Content-Type": "application/json"}
-        response = requests.put(url, headers=headers, data=json.dumps(config))
+        response = requests.put(url, headers=headers, data=json.dumps(config), auth=self.auth)
         response.raise_for_status()
         return response.json()

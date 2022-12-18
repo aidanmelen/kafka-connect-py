@@ -48,3 +48,32 @@ spec:
       fsGroup: 1000
       runAsUser: 1000
       runAsNonRoot: true
+---
+apiVersion: v1
+data:
+  basic.txt: dGhpc2lzbXl1c2VybmFtZTogdGhpc2lzbXlwYXNz
+kind: Secret
+metadata:
+  name: basicsecret
+  namespace: confluent
+type: Opaque
+---
+apiVersion: platform.confluent.io/v1beta1
+kind: Connect
+metadata:
+  name: connect-plaintext-basic-auth
+  namespace: confluent
+spec:
+  replicas: 1
+  authentication:
+    type: basic
+    basic:
+      secretRef: basicsecret
+  image:
+    application: confluentinc/cp-server-connect:7.3.0
+    init: confluentinc/confluent-init-container:2.5.0
+  podTemplate:
+    podSecurityContext:
+      fsGroup: 1000
+      runAsUser: 1000
+      runAsNonRoot: true
