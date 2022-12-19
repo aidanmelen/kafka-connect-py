@@ -77,7 +77,7 @@ kc resume <connector>
 
 Delete a connector.
 
-```
+```bash
 kc delete <connector>
 ```
 

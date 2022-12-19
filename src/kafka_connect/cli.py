@@ -53,10 +53,10 @@ def get_logger(log_level="NOTSET"):
 
 @click.group(cls=CatchAllExceptions)
 @click.version_option()
-@click.option('-e','--endpoint', default='http://localhost:8083', metavar="URL", envvar='KAFKA_CONNECT_ENDPOINT', help='The base URL for the Kafka Connect REST API.')
-@click.option('-a', '--auth', metavar="USERNAME:PASSWORD", envvar='KAFKA_CONNECT_BASIC_AUTH', help='A colon-delimited string of `username` and `password` to use for authenticating with the Kafka Connect REST API.')
-@click.option('-v', '--ssl-verify/--no-ssl-verify', default=True, is_flag=True, envvar='KAFKA_CONNECT_SSL_VERIFY', help='Whether to verify the SSL certificate when making requests to the Kafka Connect REST API.')
-@click.option('-l', '--log-level', default='NOTSET', metavar="LEVEL", envvar='KAFKA_CONNECT_LOG_LEVEL', help='The logging level to use for the logger and console handler.')
+@click.option('--endpoint', '-e', default='http://localhost:8083', metavar="URL", envvar='KAFKA_CONNECT_ENDPOINT', help='The base URL for the Kafka Connect REST API.')
+@click.option('--auth', '-a', metavar="USERNAME:PASSWORD", envvar='KAFKA_CONNECT_BASIC_AUTH', help='A colon-delimited string of `username` and `password` to use for authenticating with the Kafka Connect REST API.')
+@click.option('--ssl-verify/--no-ssl-verify', '-v', default=True, is_flag=True, envvar='KAFKA_CONNECT_SSL_VERIFY', help='Whether to verify the SSL certificate when making requests to the Kafka Connect REST API.')
+@click.option('--log-level', '-l', default='NOTSET', metavar="LEVEL", envvar='KAFKA_CONNECT_LOG_LEVEL', help='The logging level to use for the logger and console handler.')
 @click.pass_context
 def cli(ctx, endpoint, auth, ssl_verify, log_level):
     """A command-line client for the Confluent Platform Kafka Connect REST API."""
@@ -89,22 +89,33 @@ def get(kafka_connect, connector):
     click.echo(json.dumps(response))
 
 @cli.command()
-@click.argument('config-file', type=click.File('r'), required=False)
+@click.option('--config-file', '-f', type=click.File('r'), help='Path to the configuration file')
+@click.option('--config-data', '-d', help='Inline configuration data in JSON format')
 @click.pass_obj
-def create(kafka_connect, config_file):
+def create(kafka_connect, config_file, config_data):
     """Create a new connector, returning the current connector info if successful. Return 409 (Conflict) if rebalance is in process, or if the connector already exists."""
-    config_data = config_file.read()
-    config = json.loads(config_data)
-    response = kafka_connect.create_connector(config)
+    if config_file:
+        config_data = config_file.read()
+    elif config_data:
+        config_data = config_data
+    else:
+        raise click.UsageError('One of --config-file or --config-data is required')
+    response = kafka_connect.create_connector(json.loads(config_data))
     click.echo(json.dumps(response))
 
 @cli.command()
 @click.argument('connector')
-@click.argument('config-file', type=click.File('r'))
+@click.option('--config-file', '-f', type=click.File('r'), help='Path to the configuration file')
+@click.option('--config-data', '-d', help='Inline configuration data in JSON format')
 @click.pass_obj
-def update(kafka_connect, connector, config_file):
+def update(kafka_connect, connector, config_file, config_data):
     """Create a new connector using the given configuration, or update the configuration for an existing connector. Returns information about the connector after the change has been made. Return 409 (Conflict) if rebalance is in process."""
-    config_data = config_file.read()
+    if config_file:
+        config_data = config_file.read()
+    elif config_data:
+        config_data = config_data
+    else:
+        raise click.UsageError('One of --config-file or --config-data is required')
     config = json.loads(config_data)
     response = kafka_connect.update_connector(connector, json.loads(config_data))
     click.echo(json.dumps(response))

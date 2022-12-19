@@ -1,6 +1,4 @@
-from requests.exceptions import HTTPError
-from requests.exceptions import ConnectionError
-from json.decoder import JSONDecodeError
+from requests.exceptions import HTTPError, ConnectionError, JSONDecodeError
 
 import json
 import logging
@@ -89,14 +87,13 @@ class KafkaConnect():
         response = requests.post(url, auth=self.auth, verify=self.verify, headers=self.headers, data=json.dumps(config))
         
         if response.status_code == 409:
-            # A rebalance is needed, forthcoming, or underway.
             self.logger.error("Connector already exists or rebalance is in process.")
         
         response.raise_for_status()
         try:
             data = response.json()
         except JSONDecodeError:
-            data = {}
+            data = None
         return data
 
     def update_connector(self, connector, config):
@@ -116,7 +113,6 @@ class KafkaConnect():
         response = requests.put(url, headers=self.headers, auth=self.auth, verify=self.verify, data=json.dumps(config))
 
         if response.status_code == 409:
-            # A rebalance is underway.
             self.logger.error("Connector rebalance is in process.")
         else:
             return response.json()
@@ -125,7 +121,7 @@ class KafkaConnect():
         try:
             data = response.json()
         except JSONDecodeError:
-            data = {}
+            data = None
         return data
 
     def get_connector_config(self, connector):
@@ -171,30 +167,24 @@ class KafkaConnect():
         try:
             data = response.json()
         except JSONDecodeError:
-            data = {}
+            data = None
         
         if response.status_code == 200:
-            # The connector was successfully restarted.
             self.logger.info("Connector restarted successfully.")
             return data
         elif response.status_code == 202:
-            # The connector restart request was accepted and is being processed.
             self.logger.info("Connector restart request accepted.")
             return data
         elif response.status_code == 204:
-            # The operation was successful but there is no content in the response.
             self.logger.info("Connector restart request successful, but no response body returned.")
             return data
         elif response.status_code == 404:
-            # The named connector does not exist.
             self.logger.error("Connector not found.")
             raise HTTPError(response.text)
         elif response.status_code == 409:
-            # A rebalance is needed, forthcoming, or underway.
             self.logger.error("Rebalance needed to restart connector.")
             raise HTTPError(response.text)
         elif response.status_code == 500:
-            # The request timed out.
             self.logger.error("Connector restart request timed out.")
             raise HTTPError(response.text)
         
@@ -215,7 +205,7 @@ class KafkaConnect():
         try:
             data = response.json()
         except JSONDecodeError:
-            data = {}
+            data = None
         return data
 
     def resume_connector(self, connector):
@@ -232,7 +222,7 @@ class KafkaConnect():
         try:
             data = response.json()
         except JSONDecodeError:
-            data = {}
+            data = None
         return data
 
     def delete_connector(self, connector):
@@ -249,7 +239,7 @@ class KafkaConnect():
         try:
             data = response.json()
         except JSONDecodeError:
-            data = {}
+            data = None
         return data
 
     def list_connector_tasks(self, connector):
@@ -294,7 +284,7 @@ class KafkaConnect():
         try:
             data = response.json()
         except JSONDecodeError:
-            data = {}
+            data = None
         return data
 
     def list_connector_topics(self, connector):
@@ -322,9 +312,9 @@ class KafkaConnect():
         response = requests.put(url, auth=self.auth, verify=self.verify)
         response.raise_for_status()
         try:
-            data = response.json()
+            return response.json()
         except JSONDecodeError:
-            data = {}
+            data = None
         return data
 
     def list_connector_plugins(self):
@@ -354,5 +344,5 @@ class KafkaConnect():
         try:
             data = response.json()
         except JSONDecodeError:
-            data = {}
+            data = None
         return data
