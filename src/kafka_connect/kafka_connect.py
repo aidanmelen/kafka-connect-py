@@ -14,7 +14,7 @@ class KafkaConnect():
         verify (bool): Whether to verify the SSL certificate when making requests to the Kafka Connect REST API. Defaults to False.
         logger (logging.Logger): The logger to be used. If not specified, a new logger will be created.
     """
-    def __init__(self, endpoint="http://localhost:8083", auth=None, verify=True, logger=None):
+    def __init__(self, endpoint="http://localhost:8083", auth=None, ssl_verify=True, logger=None):
         self.endpoint = endpoint
         self.headers = {"Content-Type": "application/json"}
 
@@ -24,12 +24,14 @@ class KafkaConnect():
                 raise ValueError("Invalid auth string. Expected a colon-delimited string of `username` and `password`.")
             username, password = auth.split(':')
             self.auth = (username.strip(), password.strip())
+        else:
+            self.auth = None
 
-        # If verify is False, disable SSL warnings
-        if not verify:
+        # If ssl_verify is False, disable SSL warnings
+        if not ssl_verify:
             import urllib3
             urllib3.disable_warnings()
-        self.verify = verify
+        self.verify = ssl_verify
 
         self.logger = logger if logger else logging.getLogger()
 

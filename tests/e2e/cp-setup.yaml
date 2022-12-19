@@ -1,4 +1,14 @@
 ---
+apiVersion: v1
+data:
+  # WARNING: insecure credential for example purposes only
+  basic.txt: dGhpc2lzbXl1c2VybmFtZTogdGhpc2lzbXlwYXNz
+kind: Secret
+metadata:
+  name: basicsecret
+  namespace: confluent
+type: Opaque
+---
 kind: Secret
 apiVersion: v1
 metadata:
