@@ -115,7 +115,7 @@ from kafka_connect import KafkaConnect
 client = KafkaConnect(endpoint="http://localhost:8083")
 
 # Get the version and other details of the Kafka Connect cluster
-cluster = client.get_cluster()
+cluster = client.get_info()
 print(cluster)
 
 # Get a list of active connectors

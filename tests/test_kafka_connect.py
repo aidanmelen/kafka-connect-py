@@ -11,7 +11,7 @@ class TestKafkaConnect(unittest.TestCase):
         self.kafka_connect = KafkaConnect()
 
     @patch('kafka_connect.kafka_connect.requests')
-    def test_get_cluster(self, mock_requests):
+    def test_get_info(self, mock_requests):
         # Set up mock response
         mock_response = mock_requests.get.return_value
         mock_response.json.return_value = {
@@ -20,8 +20,8 @@ class TestKafkaConnect(unittest.TestCase):
             "kafka_cluster_id": "def456"
         }
 
-        # Call the get_cluster() method
-        result = self.kafka_connect.get_cluster()
+        # Call the get_info() method
+        result = self.kafka_connect.get_info()
 
         # Assert that the correct URL was called
         mock_requests.get.assert_called_with('http://localhost:8083')
