@@ -14,96 +14,72 @@ pip install kafka-connect-py
 
 ## Command Line Usage
 
-Retrieve the version and other details of the Kafka Connect cluster.
+Get the version and other details of the Kafka Connect cluster.
 
 ```bash
-$ kc get-cluster
+kc info
 ```
 
-Retrieve the details of a single connector.
+Get a list of active connectors.
 
 ```bash
-$ kc get-connector <connector>
+kc list
+kc list [--expand=status|info]
 ```
 
-Retrieve a list of active connectors. The `--expand' option can be used to retrieve additional information about the connectors, such as their status or metadata.
+Get the details of a single connector.
 
 ```bash
-$ kc get-connectors [--expand=status|info]
+kc get <connector>
 ```
 
-Create a new connector using the configuration specified in the given file. If the connector already exists or a rebalance is in process, Wil return a status code of 409.
+Get the status of a connector.
 
 ```bash
-$ kc create-connector <config_file>
+kc status <connector>
 ```
 
-Update the configuration for an existing connector. If a rebalance is in process, Wil return a status code of 409.
+Get the config of a connector.
 
 ```bash
-$ kc update-connector <connector> <config_file>
+kc config <connector>
 ```
 
-Retrieve the configuration of a connector.
+Create a new connector.
 
 ```bash
-$ kc get-connector <connector>
+kc create <config-file>
 ```
 
-Retrieve the config of a connector.
+Update the configuration for an existing connector.
 
 ```bash
-$ kc get-connector-config <connector>
+kc update <connector> <config_file>
 ```
 
-Retrieve the status of a connector.
+Restart a connector.
 
 ```bash
-$ kc get-connector-status <connector>
-```
-
-Retrieve the tasks of a connector. The `--include-tasks' option can be used to include task information in the response.
-
-```bash
-$ kc get-connector-tasks <connector> [--include-tasks]
+kc restart <connector>
 ```
 
 Pause a connector.
 
 ```bash
-$ kc pause-connector <connector>
+kc pause <connector>
 ```
 
-Resume a connector that was previously paused.
+Resume a connector.
 
 ```bash
-$ kc resume-connector <connector>
+kc resume <connector>
 ```
 
 Delete a connector.
 
-```bash
-$ kc delete-connector <connector>
 ```
-
-Validate the configuration specified in the given file. If the configuration is valid, Wil return a status code of 200.
-
-```bash
-$ kc validate-connector-config <config_file>
+kc delete <connector>
 ```
-
-Retrieve metadata about the specified connector plugin.
-
-```bash
-$ kc get-connector-plugin <connector>
-```
-
-Retrieve metadata about all available connector plugins.
-
-```bash
-$ kc get-connector-plugins
-```
-
 
 ### Python
 
