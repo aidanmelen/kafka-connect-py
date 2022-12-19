@@ -225,7 +225,7 @@ class KafkaConnect():
         url = f"{self.endpoint}/connectors/{connector}"
         response = requests.delete(url, auth=self.auth, verify=self.verify)
         response.raise_for_status()
-        return response.json()
+        return None
 
     def list_connector_tasks(self, connector):
         """Get the list of tasks for a connector.

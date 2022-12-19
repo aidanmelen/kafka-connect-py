@@ -157,7 +157,7 @@ def resume(kafka_connect, connector):
 def delete(kafka_connect, connector):
     """Deletes a connector."""
     response = kafka_connect.delete_connector(connector)
-    click.echo(json.dumps(response))
+    click.echo(json.dumps({"name": connector, "status": "deleted"}))
 
 @cli.command()
 @click.argument('connector')
