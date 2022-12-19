@@ -1,5 +1,6 @@
 from requests.exceptions import HTTPError
 from requests.exceptions import ConnectionError
+from json.decoder import JSONDecodeError
 
 import json
 import logging
@@ -79,7 +80,7 @@ class KafkaConnect():
         Args:
             config (Dict[str, Any]): The configuration for the connector.
         Returns:
-            Dict[str, Any]: The response from the REST API, if any.
+            Dict[str, Any]: The response from the REST API, or an empty dictionary if the response is null or if there is a JSONDecodeError.
         Raises:
             HTTPError: If the REST API responds with a non-200 status code.
         """
@@ -92,7 +93,11 @@ class KafkaConnect():
             self.logger.error("Connector already exists or rebalance is in process.")
         
         response.raise_for_status()
-        return response.json()
+        try:
+            data = response.json()
+        except JSONDecodeError:
+            data = {}
+        return data
 
     def update_connector(self, connector, config):
         """Update an existing connector.
@@ -100,7 +105,7 @@ class KafkaConnect():
             connector (str): The name of the connector.
             config (Dict[str, Any]): The new configuration for the connector.
         Returns:
-            Dict[str, Any]: The response from the REST API.
+            Dict[str, Any]: The response from the REST API, or an empty dictionary if the response is null or if there is a JSONDecodeError.
         """
     
         if "config" in config:
@@ -117,7 +122,11 @@ class KafkaConnect():
             return response.json()
 
         response.raise_for_status()
-        return response
+        try:
+            data = response.json()
+        except JSONDecodeError:
+            data = {}
+        return data
 
     def get_connector_config(self, connector):
         """Get the configuration of a single connector.
@@ -153,25 +162,29 @@ class KafkaConnect():
                 Defaults to `False`.
             only_failed (bool): Whether to restart only failed Task objects. Defaults to `False`.
         Returns:
-            Dict[str, Any]: The response from the REST API.
+            Dict[str, Any]: The response from the REST API, or an empty dictionary if the response is null or if there is a JSONDecodeError.
         """
         self.logger.info(f"Restarting connector: {connector}")
         url = f"{self.endpoint}/connectors/{connector}/restart"
         params = {"includeTasks": include_tasks, "onlyFailed": only_failed}
         response = requests.post(url, auth=self.auth, verify=self.verify, params=params)
+        try:
+            data = response.json()
+        except JSONDecodeError:
+            data = {}
         
         if response.status_code == 200:
             # The connector was successfully restarted.
             self.logger.info("Connector restarted successfully.")
-            return
+            return data
         elif response.status_code == 202:
             # The connector restart request was accepted and is being processed.
             self.logger.info("Connector restart request accepted.")
-            return response.json()
+            return data
         elif response.status_code == 204:
             # The operation was successful but there is no content in the response.
             self.logger.info("Connector restart request successful, but no response body returned.")
-            return
+            return data
         elif response.status_code == 404:
             # The named connector does not exist.
             self.logger.error("Connector not found.")
@@ -186,46 +199,58 @@ class KafkaConnect():
             raise HTTPError(response.text)
         
         response.raise_for_status()
-        return response
+        return data
 
     def pause_connector(self, connector):
         """Pause a single connector.
         Args:
             connector (str): The name of the connector.
         Returns:
-            Dict[str, Any]: The response from the REST API.
+            Dict[str, Any]: The response from the REST API, or an empty dictionary if the response is null or if there is a JSONDecodeError.
         """
         self.logger.info(f"Pausing connector: {connector}")
         url = f"{self.endpoint}/connectors/{connector}/pause"
         response = requests.put(url, auth=self.auth, verify=self.verify)
         response.raise_for_status()
-        return response.json()
+        try:
+            data = response.json()
+        except JSONDecodeError:
+            data = {}
+        return data
 
     def resume_connector(self, connector):
         """Resume a single connector.
         Args:
             connector (str): The name of the connector.
         Returns:
-            Dict[str, Any]: The response from the REST API.
+            Dict[str, Any]: The response from the REST API, or an empty dictionary if the response is null or if there is a JSONDecodeError.
         """
         self.logger.info(f"Resuming connector: {connector}")
         url = f"{self.endpoint}/connectors/{connector}/resume"
         response = requests.put(url, auth=self.auth, verify=self.verify)
         response.raise_for_status()
-        return response.json()
+        try:
+            data = response.json()
+        except JSONDecodeError:
+            data = {}
+        return data
 
     def delete_connector(self, connector):
         """Delete a single connector.
         Args:
             connector (str): The name of the connector.
         Returns:
-            Dict[str, Any]: The response from the REST API.
+            Dict[str, Any]: The response from the REST API, or an empty dictionary if the response is null or if there is a JSONDecodeError.
         """
         self.logger.info(f"Deleting connector: {connector}")
         url = f"{self.endpoint}/connectors/{connector}"
         response = requests.delete(url, auth=self.auth, verify=self.verify)
         response.raise_for_status()
-        return None
+        try:
+            data = response.json()
+        except JSONDecodeError:
+            data = {}
+        return data
 
     def list_connector_tasks(self, connector):
         """Get the list of tasks for a connector.
@@ -260,13 +285,17 @@ class KafkaConnect():
             connector (str): The name of the connector.
             task_id (int): The ID of the task.
         Returns:
-            Dict[str, Any]: The response from the REST API.
+            Dict[str, Any]: The response from the REST API, or an empty dictionary if the response is null or if there is a JSONDecodeError.
         """
         self.logger.info(f"Restarting task {task_id} of connector: {connector}")
         url = f"{self.endpoint}/connectors/{connector}/tasks/{task_id}/restart"
         response = requests.post(url, auth=self.auth, verify=self.verify)
         response.raise_for_status()
-        return response.json()
+        try:
+            data = response.json()
+        except JSONDecodeError:
+            data = {}
+        return data
 
     def list_connector_topics(self, connector):
         """Get the list of topics for a connector.
@@ -286,13 +315,17 @@ class KafkaConnect():
         Args:
             connector (str): The name of the connector.
         Returns:
-            Dict[str, Any]: The response from the REST API.
+            Dict[str, Any]: The response from the REST API, or an empty dictionary if the response is null or if there is a JSONDecodeError.
         """
         self.logger.info(f"Resetting topics for connector: {connector}")
         url = f"{self.endpoint}/connectors/{connector}/topics/reset"
         response = requests.put(url, auth=self.auth, verify=self.verify)
         response.raise_for_status()
-        return response.json()
+        try:
+            data = response.json()
+        except JSONDecodeError:
+            data = {}
+        return data
 
     def list_connector_plugins(self):
         """Get the list of connector plugins.
@@ -312,10 +345,14 @@ class KafkaConnect():
             plugin (str): The name of the plugin.
             config (Dict[str, Any]): The configuration to be validated.
         Returns:
-            Dict[str, Any]: The response from the REST API.
+            Dict[str, Any]: The response from the REST API, or an empty dictionary if the response is null or if there is a JSONDecodeError.
         """
         self.logger.info(f"Validating config for plugin: {plugin}")
         url = f"{self.endpoint}/connector-plugins/{plugin}/config/validate"
         response = requests.put(url, auth=self.auth, verify=self.verify, headers=self.headers, data=json.dumps(config))
         response.raise_for_status()
-        return response.json()
+        try:
+            data = response.json()
+        except JSONDecodeError:
+            data = {}
+        return data

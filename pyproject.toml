@@ -1,9 +1,11 @@
 [tool.poetry]
 name = "kafka-connect-py"
-version = "0.3.1"
+version = "0.3.3"
 description = "A client for the Confluent Platform Kafka Connect REST API."
 authors = ["Aidan Melen <aidan-melen@protonmail.com>"]
 readme = "README.md"
+homepage = "https://github.com/aidanmelen/kafka-connect-py"
+repository = "https://github.com/aidanmelen/kafka-connect-py"
 license = "MIT"
 packages = [{include = "kafka_connect", from = "src"}]
 
