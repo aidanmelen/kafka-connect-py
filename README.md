@@ -23,7 +23,6 @@ kc info
 Get a list of active connectors.
 
 ```bash
-kc list
 kc list [--expand=status|info]
 ```
 
@@ -48,19 +47,25 @@ kc config <connector>
 Create a new connector.
 
 ```bash
-kc create <config-file>
+kc create --config-file <config-file>
+
+# or with inline JSON data
+kc create --config-data <config-data>
 ```
 
 Update the configuration for an existing connector.
 
 ```bash
-kc update <connector> <config_file>
+kc update <connector> --config-file <config_file>
+
+# or with inline JSON data
+kc create <connector> --config-data <config-data>
 ```
 
 Restart a connector.
 
 ```bash
-kc restart <connector>
+kc restart <connector> [--include-tasks] [--only-failed]
 ```
 
 Pause a connector.
