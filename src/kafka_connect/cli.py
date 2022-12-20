@@ -36,7 +36,7 @@ def get_logger(log_level="NOTSET"):
     log_level_number = logging.getLevelName(log_level.upper())
     logger.setLevel(log_level_number)
 
-    # create console handler and set level to info
+    # create console handler and set log level
     ch = logging.StreamHandler()
     ch.setLevel(log_level.upper())
 
@@ -58,10 +58,9 @@ def get_logger(log_level="NOTSET"):
 @click.option('--ssl-verify/--no-ssl-verify', '-s', default=True, is_flag=True, envvar='KAFKA_CONNECT_SSL_VERIFY', show_envvar=True, help='Whether to verify the SSL certificate when making requests to the Kafka Connect REST API.')
 @click.option('--log-level', '-l', default='NOTSET', metavar="LEVEL", envvar='KAFKA_CONNECT_LOG_LEVEL', show_envvar=True, help='The logging level to use for the logger and console handler.')
 @click.pass_context
-def cli(ctx, endpoint, auth, insecure, log_level):
+def cli(ctx, endpoint, auth, ssl_verify, log_level):
     """A command-line client for the Confluent Platform Kafka Connect REST API."""
     logger = get_logger(log_level)
-    ssl_verify = not insecure
     kafka_connect = KafkaConnect(endpoint, auth, ssl_verify, logger)
     ctx.obj = kafka_connect
 
