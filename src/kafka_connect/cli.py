@@ -53,17 +53,17 @@ def get_logger(log_level="NOTSET"):
 
 @click.group(cls=CatchAllExceptions)
 @click.version_option()
-@click.option('--endpoint', '-e', default='http://localhost:8083', metavar="URL", envvar='KAFKA_CONNECT_ENDPOINT', help='The base URL for the Kafka Connect REST API.')
-@click.option('--auth', '-a', metavar="USERNAME:PASSWORD", envvar='KAFKA_CONNECT_BASIC_AUTH', help='A colon-delimited string of `username` and `password` to use for authenticating with the Kafka Connect REST API.')
-@click.option('--ssl-verify/--no-ssl-verify', '-v', default=True, is_flag=True, envvar='KAFKA_CONNECT_SSL_VERIFY', help='Whether to verify the SSL certificate when making requests to the Kafka Connect REST API.')
-@click.option('--log-level', '-l', default='NOTSET', metavar="LEVEL", envvar='KAFKA_CONNECT_LOG_LEVEL', help='The logging level to use for the logger and console handler.')
+@click.option('--endpoint', '-e', default='http://localhost:8083', metavar="URL", envvar='KAFKA_CONNECT_ENDPOINT', show_envvar=True, help='The base URL for the Kafka Connect REST API.')
+@click.option('--auth', '-a', metavar="USERNAME:PASSWORD", envvar='KAFKA_CONNECT_BASIC_AUTH', show_envvar=True, help='A colon-delimited string of `username` and `password` to use for authenticating with the Kafka Connect REST API.')
+@click.option('--ssl-verify/--no-ssl-verify', '-s', default=True, is_flag=True, envvar='KAFKA_CONNECT_SSL_VERIFY', show_envvar=True, help='Whether to verify the SSL certificate when making requests to the Kafka Connect REST API.')
+@click.option('--log-level', '-l', default='NOTSET', metavar="LEVEL", envvar='KAFKA_CONNECT_LOG_LEVEL', show_envvar=True, help='The logging level to use for the logger and console handler.')
 @click.pass_context
-def cli(ctx, endpoint, auth, ssl_verify, log_level):
+def cli(ctx, endpoint, auth, insecure, log_level):
     """A command-line client for the Confluent Platform Kafka Connect REST API."""
     logger = get_logger(log_level)
+    ssl_verify = not insecure
     kafka_connect = KafkaConnect(endpoint, auth, ssl_verify, logger)
     ctx.obj = kafka_connect
-
 
 @cli.command()
 @click.pass_obj
@@ -73,7 +73,7 @@ def info(kafka_connect):
     click.echo(json.dumps(cluster))
 
 @cli.command()
-@click.option('-ex', '--expand', type=click.Choice(['status', 'info']), envvar='KAFKA_CONNECT_EXPAND', help='Optional parameter that retrieves additional information about the connectors.')
+@click.option('-ex', '--expand', type=click.Choice(['status', 'info']), envvar='KAFKA_CONNECT_EXPAND', show_envvar=True, help='Optional parameter that retrieves additional information about the connectors.')
 @click.pass_obj
 def list(kafka_connect, expand):
     """Get a list of active connectors."""
@@ -138,8 +138,8 @@ def status(kafka_connect, connector):
 
 @cli.command()
 @click.argument('connector')
-@click.option('-i', '--include-tasks', is_flag=True, default=False, envvar='KAFKA_CONNECT_INCLUDE_TASKS', help='Whether to include the Task objects in the restart operation.')
-@click.option('-o', '--only-failed', is_flag=True, default=False, envvar='KAFKA_CONNECT_ONLY_FAILED', help='Whether to restart only failed Task objects.')
+@click.option('-i', '--include-tasks', is_flag=True, default=False, envvar='KAFKA_CONNECT_INCLUDE_TASKS', show_envvar=True, help='Whether to include the Task objects in the restart operation.')
+@click.option('-o', '--only-failed', is_flag=True, default=False, envvar='KAFKA_CONNECT_ONLY_FAILED', show_envvar=True, help='Whether to restart only failed Task objects.')
 @click.pass_obj
 def restart(kafka_connect, connector, include_tasks, only_failed):
     """Restart a connector."""
@@ -172,7 +172,7 @@ def delete(kafka_connect, connector):
 
 @cli.command()
 @click.argument('connector')
-@click.option('-i', '--include-tasks', is_flag=True, default=False, envvar='KAFKA_CONNECT_INCLUDE_TASKS', help='Whether to include the Task objects in the restart operation.')
+@click.option('--include-tasks', 'i', is_flag=True, default=False, envvar='KAFKA_CONNECT_INCLUDE_TASKS', show_envvar=True, help='Whether to include the Task objects in the restart operation.')
 @click.pass_obj
 def list_tasks(kafka_connect, connector):
     """Gets the list of tasks associated with a connector."""
@@ -222,17 +222,17 @@ def list_plugins(kafka_connect):
 
 @cli.command()
 @click.argument('plugin')
-@click.argument('config-file', type=click.File('r'))
-@click.argument('config-data', type=str, required=False, default=None)
+@click.option('--config-file', '-f', type=click.File('r'), help='Path to the configuration file')
+@click.option('--config-data', '-d', help='Inline configuration data in JSON format')
 @click.pass_obj
 def validate_config(kafka_connect, plugin, config_file, config_data):
     """Validate the configuration for a specific connector plugin."""
     if config_file:
         config_data = config_file.read()
-        config = json.loads(config_data)
     elif config_data:
-        config = json.loads(config_data)
+        config_data = config_data
     else:
-        raise click.UsageError("Either config-file or config_data must be provided")
-    response = kafka_connect.validate_connector_config(plugin, json.loads(config_data))
+        raise click.UsageError('One of --config-file or --config-data is required')
+    config = json.loads(config_data)
+    response = kafka_connect.validate_connector_config(plugin, config_data)
     click.echo(json.dumps(response))

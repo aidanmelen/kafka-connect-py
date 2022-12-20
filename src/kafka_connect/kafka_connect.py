@@ -10,7 +10,7 @@ class KafkaConnect():
     Args:
         endpoint (str): The base URL for the Kafka Connect REST API.
         auth (str): A colon-delimited string of `username` and `password` to use for authenticating with the Kafka Connect REST API.
-        verify (bool): Whether to verify the SSL certificate when making requests to the Kafka Connect REST API. Defaults to False.
+        ssl_verify (bool): Whether to verify the SSL certificate when making requests to the Kafka Connect REST API. Defaults to True.
         logger (logging.Logger): The logger to be used. If not specified, a new logger will be created.
     """
     def __init__(self, endpoint="http://localhost:8083", auth=None, ssl_verify=True, logger=None):

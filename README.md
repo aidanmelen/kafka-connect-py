@@ -48,8 +48,11 @@ Create a new connector.
 
 ```bash
 kc create --config-file <config-file>
+```
 
-# or with inline JSON data
+or with inline JSON data.
+
+```bash
 kc create --config-data <config-data>
 ```
 
@@ -57,8 +60,11 @@ Update the configuration for an existing connector.
 
 ```bash
 kc update <connector> --config-file <config_file>
+```
 
-# or with inline JSON data
+or with inline JSON data.
+
+```bash
 kc create <connector> --config-data <config-data>
 ```
 
