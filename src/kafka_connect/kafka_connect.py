@@ -34,7 +34,7 @@ class KafkaConnect():
 
         self.logger = logger if logger else logging.getLogger()
 
-    def get_info(self):
+    def get_cluster_info(self):
         """Get the version and other details of the Kafka Connect cluster.
         Returns:
             Dict[str, str]: The details of the cluster, including its version, commit ID, and Kafka cluster ID.

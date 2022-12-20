@@ -69,7 +69,7 @@ def cli(ctx, endpoint, auth, ssl_verify, log_level):
 @click.pass_obj
 def info(kafka_connect):
     """Get the version and other details of the Kafka Connect cluster."""
-    cluster = kafka_connect.get_info()
+    cluster = kafka_connect.get_cluster_info()
     click.echo(json.dumps(cluster))
 
 @cli.command()
@@ -183,7 +183,7 @@ def list_tasks(kafka_connect, connector):
 @click.argument('connector')
 @click.argument('task_id')
 @click.pass_obj
-def get_task_status(kafka_connect, connector, task_id):
+def task_status(kafka_connect, connector, task_id):
     """Gets the status of a task associated with a connector."""
     response = kafka_connect.get_connector_task_status(connector, task_id)
     click.echo(json.dumps(response))
