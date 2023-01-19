@@ -46,11 +46,12 @@ class KafkaConnect():
         response.raise_for_status()
         return response.json()
 
-    def list_connectors(self, expand=None):
-        """Get the list of active connectors.
+    def list_connectors(self, expand=None, connector_pattern=None):
+        """Get the list of connectors.
         Args:
             expand (str): Optional parameter that retrieves additional information about the connectors.
                 Valid values are "status" and "info".
+            connector_pattern (str): The regex pattern to match the connector name. If not provided, all connectors will be listed.
         Returns:
             List[str]: The list of connector names.
         """
@@ -59,7 +60,20 @@ class KafkaConnect():
         params = {"expand": expand}
         response = requests.get(url, auth=self.auth, verify=self.verify, params=params)
         response.raise_for_status()
-        return response.json()
+        connectors = response.json()
+        responses = {}
+
+        if connector_pattern:
+            self.logger.debug(f"Filtering connectors.")
+
+            for connector, data in connectors.items():
+                if not re.match(connector_pattern, connector):
+                    continue
+                responses[connector] = data
+        else:
+            responses = connectors
+
+        return responses
     
     def get_connector(self, connector):
         """Get the details of a single connector.
@@ -73,25 +87,6 @@ class KafkaConnect():
         response = requests.get(url, auth=self.auth, verify=self.verify)
         response.raise_for_status()
         return response.json()
-    
-    def get_all_connectors(self, connector_pattern=None):
-        """Retrieves the details of all connectors.
-        Args:
-            connector_pattern (str): The regex pattern to match the connector name. If not provided, all connectors will be returned.
-        Returns:
-            Dict[str, Dict[str, Any]]: A dictionary of connector details, where the keys are the connector names and the values are the details.
-        """
-        self.logger.info(f"Retrieving details of all connectors{' matching the pattern: ' + connector_pattern if connector_pattern else ''}")
-        responses = {}
-        for connector, info in self.list_connectors(expand="status").items():
-
-            self.logger.debug(f"Checking {connector} connector: {info}")
-            if connector_pattern and not re.match(connector_pattern, connector):
-                continue
-
-            responses[connector] = self.get_connector(connector)
-
-        return responses
 
     def create_connector(self, config):
         """Create a new connector.
@@ -224,7 +219,7 @@ class KafkaConnect():
 
         responses = {}
         for connector, info in self.list_connectors(expand="status").items():
-            self.logger.debug(f"Checking {connector} connector: {info}")
+            self.logger.debug(f"Filtering {connector} connector: {info}")
 
             if connector_pattern and not re.match(connector_pattern, connector):
                 continue
@@ -261,13 +256,15 @@ class KafkaConnect():
         
         responses = {}
         for connector, info in self.list_connectors(expand="status").items():
-            self.logger.debug(f"Checking {connector} connector: {info}")
+            self.logger.debug(f"Filtering {connector} connector: {info}")
 
             if connector_pattern and not re.match(connector_pattern, connector):
                 continue
 
             if info.get("status", {}).get("connector", {}).get("state", None).upper() == "RUNNING":
                 responses[connector] = self.pause_connector(connector)
+            else:
+                self.logger.debug(f"Skipping the {connector} connector because it is not in a RUNNING state.")
 
         return responses
 
@@ -298,13 +295,15 @@ class KafkaConnect():
         self.logger.info(f"Resuming all paused connectors{' matching the pattern: ' + connector_pattern if connector_pattern else ''}")
         responses = {}
         for connector, info in self.list_connectors(expand="status").items():
-            self.logger.debug(f"Checking {connector} connector: {info}")
+            self.logger.debug(f"Filtering {connector} connector: {info}")
 
             if connector_pattern and not re.match(connector_pattern, connector):
                 continue
 
             if info.get("status", {}).get("connector", {}).get("state", None).upper() == "PAUSED":
                 responses[connector] = self.resume_connector(connector)
+            else:
+                self.logger.debug(f"Skipping the {connector} connector because it is not in a PAUSED state.")
 
         return responses
 
@@ -335,7 +334,7 @@ class KafkaConnect():
         self.logger.info(f"Deleting all connectors{' matching the pattern: ' + connector_pattern if connector_pattern else ''}")
         responses = {}
         for connector, info in self.list_connectors(expand="status").items():
-            self.logger.debug(f"Checking connector: {connector}")
+            self.logger.debug(f"Filtering connector: {connector}")
 
             if connector_pattern and not re.match(connector_pattern, connector):
                 continue

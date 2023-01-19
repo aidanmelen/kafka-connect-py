@@ -20,22 +20,16 @@ Get the version and other details of the Kafka Connect cluster.
 kc info
 ```
 
-###### Get a list of active connectors
+###### Get a list of all connectors
 
 ```bash
-kc list [--expand=status|info]
+kc list [--expand=status|info] [--connector-pattern=regex]
 ```
 
 ###### Get the details of a single connector
 
 ```bash
 kc get <connector>
-```
-
-###### Get the details of all connectors
-
-```bash
-kc get --all-connectors [--connector-pattern=regex]
 ```
 
 ###### Get the status of a connector
