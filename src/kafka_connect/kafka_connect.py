@@ -2,6 +2,7 @@ from requests.exceptions import HTTPError, ConnectionError, JSONDecodeError
 
 import json
 import logging
+import re
 import requests
 
 
@@ -190,6 +191,29 @@ class KafkaConnect():
         
         response.raise_for_status()
         return data
+    
+    def restart_all_connectors(self, include_tasks=False, only_failed=False, connector_pattern=None):
+        """Restart all connectors.
+        Args:
+        include_tasks (bool): Whether to include tasks when restarting the connector. Default is False.
+        only_failed (bool): Whether to only restart failed tasks. Default is False.
+        connector_pattern (str): The regex pattern to match the connector name. If not provided, all connectors will be restarted.
+        Returns:
+            Dict[str, Dict[str, Any]]: A dictionary of responses, where the keys are the connector names and the values are the responses.
+        """
+        self.logger.info(f"Restarting all connectors{' matching the pattern: ' + connector_pattern if connector_pattern else ''}")
+
+        responses = {}
+        for connector, info in self.list_connectors(expand="status").items():
+            self.logger.debug(f"Checking {connector} connector: {info}")
+
+            if connector_pattern and not re.match(connector_pattern, connector):
+                continue
+
+            self.logger.info(f"Restarting connector: {connector}")
+            responses[connector] = self.restart_connector(connector, include_tasks, only_failed)
+
+        return responses
 
     def pause_connector(self, connector):
         """Pause a single connector.
@@ -207,6 +231,28 @@ class KafkaConnect():
         except JSONDecodeError:
             data = None
         return data
+    
+    def pause_all_connectors(self, connector_pattern=None):
+        """Pause all connectors.
+        Args:
+            connector_pattern (str): The regex pattern to match the connector name. If not provided, all running connectors will be paused.
+        Returns:
+            Dict[str, Dict[str, Any]]: A dictionary of responses, where the keys are the connector names and the values are the responses.
+        """
+        self.logger.info(f"Pausing all running connectors{' matching the pattern: ' + connector_pattern if connector_pattern else ''}")
+        
+        responses = {}
+        for connector, info in self.list_connectors(expand="status").items():
+            self.logger.debug(f"Checking {connector} connector: {info}")
+
+            if connector_pattern and not re.match(connector_pattern, connector):
+                continue
+
+            if info.get("status", {}).get("connector", {}).get("state", None).upper() == "RUNNING":
+                self.logger.info(f"Pausing connector: {connector}")
+                responses[connector] = self.pause_connector(connector)
+
+        return responses
 
     def resume_connector(self, connector):
         """Resume a single connector.
@@ -225,6 +271,27 @@ class KafkaConnect():
             data = None
         return data
 
+    def resume_all_connectors(self, connector_pattern=None):
+        """Resume all connectors.
+        Args:
+            connector_pattern (str): The regex pattern to match the connector name. If not provided, all paused connectors will be resumed.
+        Returns:
+            Dict[str, Dict[str, Any]]: A dictionary of responses, where the keys are the connector names and the values are the responses.
+        """
+        self.logger.info(f"Resuming all paused connectors{' matching the pattern: ' + connector_pattern if connector_pattern else ''}")
+        responses = {}
+        for connector, info in self.list_connectors(expand="status").items():
+            self.logger.debug(f"Checking {connector} connector: {info}")
+
+            if connector_pattern and not re.match(connector_pattern, connector):
+                continue
+
+            if info.get("status", {}).get("connector", {}).get("state", None).upper() == "PAUSED":
+                self.logger.info(f"Resuming connector: {connector}")
+                responses[connector] = self.resume_connector(connector)
+
+        return responses
+
     def delete_connector(self, connector):
         """Delete a single connector.
         Args:
@@ -241,6 +308,26 @@ class KafkaConnect():
         except JSONDecodeError:
             data = None
         return data
+    
+    def delete_all_connectors(self, connector_pattern=None):
+        """Delete all connectors.
+        Args:
+            connector_pattern (str): The regex pattern to match the connector name. If not provided, all connectors will be deleted.
+        Returns:
+            Dict[str, Dict[str, Any]]: A dictionary of responses, where the keys are the connector names and the values are the responses.
+        """
+        self.logger.info(f"Deleting all connectors{' matching the pattern: ' + connector_pattern if connector_pattern else ''}")
+        responses = {}
+        for connector, info in self.list_connectors(expand="status").items():
+            self.logger.debug(f"Checking connector: {connector}")
+
+            if connector_pattern and not re.match(connector_pattern, connector):
+                continue
+
+            self.logger.info(f"Deleting connector: {connector}")
+            responses[connector] = self.delete_connector(connector)
+
+        return responses
 
     def list_connector_tasks(self, connector):
         """Get the list of tasks for a connector.
