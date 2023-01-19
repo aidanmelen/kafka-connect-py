@@ -20,97 +20,97 @@ Get the version and other details of the Kafka Connect cluster.
 kc info
 ```
 
-Get a list of active connectors.
+###### Get a list of active connectors
 
 ```bash
 kc list [--expand=status|info]
 ```
 
-Get the details of a single connector.
+###### Get the details of a single connector
 
 ```bash
 kc get <connector>
 ```
 
-Get the status of a connector.
+###### Get the status of a connector
 
 ```bash
 kc status <connector>
 ```
 
-Get the config of a connector.
+###### Get the config of a connector
 
 ```bash
 kc config <connector>
 ```
 
-Create a new connector.
+###### Create a new connector
 
 ```bash
 kc create --config-file <config-file>
 ```
 
-or with inline JSON data.
+###### or with inline JSON data
 
 ```bash
 kc create --config-data <config-data>
 ```
 
-Update the configuration for an existing connector.
+###### Update the configuration for an existing connector
 
 ```bash
 kc update <connector> --config-file <config_file>
 ```
 
-or with inline JSON data.
+###### or with inline JSON data
 
 ```bash
 kc create <connector> --config-data <config-data>
 ```
 
-Restart a connector.
+###### Restart a connector
 
 ```bash
 kc restart <connector> [--include-tasks] [--only-failed]
 ```
 
-Restart all connectors.
+###### Restart all connectors
 
 ```bash
 kc restart --all-connectors [--connector-pattern=regex]
 ```
 
-Pause a connector.
+###### Pause a connector
 
 ```bash
 kc pause <connector>
 ```
 
-Pause all connectors.
+###### Pause all connectors
 
 ```bash
 kc pause --all-connectors [--connector-pattern=regex]
 ```
 
-Resume a connector.
+###### Resume a connector
 
 ```bash
 kc resume <connector>
 ```
 
-Resume all connectors.
+###### Resume all connectors
 
 ```bash
 kc resume --all-connectors [--connector-pattern=regex]
 ```
 
-Delete a connector.
+###### Delete a connector
 
 ```bash
 kc delete <connector>
 ```
 
-Delete all connectors.
+###### Delete all connectors
 
 ```bash
 kc delete --all-connectors [--connector-pattern=regex]
