@@ -35,7 +35,7 @@ kc get <connector>
 ###### Get the details of all connectors
 
 ```bash
-kc get <connector> --all-connectors [--connector-pattern=regex]
+kc get --all-connectors [--connector-pattern=regex]
 ```
 
 ###### Get the status of a connector
