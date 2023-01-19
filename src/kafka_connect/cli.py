@@ -80,11 +80,16 @@ def list(kafka_connect, expand):
     click.echo(json.dumps(response))
 
 @cli.command()
-@click.argument('connector')
+@click.argument('connector', required=False)
+@click.option('-a', '--all-connectors', is_flag=True, default=False, envvar='KAFKA_CONNECT_GET_ALL', show_envvar=True, help='Whether to get all connectors.')
+@click.option('-p', '--connector-pattern', default=None, envvar='KAFKA_CONNECT_GET_CONNECTOR_PATTERN', show_envvar=True, help='The regex pattern that will get only the connectors that match when the -a or --all-connectors option is set.')
 @click.pass_obj
-def get(kafka_connect, connector):
-    """Get the details of a single connector."""
-    response = kafka_connect.get_connector(connector)
+def get(kafka_connect, connector, all_connectors, connector_pattern):
+    """Retrieves the details of a connector or all connectors that match a certain pattern."""
+    if all_connectors:
+        response = kafka_connect.get_all_connectors(connector_pattern=connector_pattern)
+    else:
+        response = kafka_connect.get_connector(connector)
     click.echo(json.dumps(response))
 
 @cli.command()
