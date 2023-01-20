@@ -32,16 +32,28 @@ kc list [--expand=status|info] [--connector-pattern=regex]
 kc get <connector>
 ```
 
-###### Get the status of a connector
+###### Get the details of all connectors
 
 ```bash
-kc status <connector>
+kc get --all-connectors [--connector-pattern=regex]
+```
+
+###### Get the status of all connectors
+
+```bash
+kc status --all-connectors [--connector-pattern=regex]
 ```
 
 ###### Get the config of a connector
 
 ```bash
 kc config <connector>
+```
+
+###### Get the config of all connectors
+
+```bash
+kc config --all-connectors [--connector-pattern=regex]
 ```
 
 ###### Create a new connector with a JSON file
