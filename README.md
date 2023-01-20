@@ -89,7 +89,7 @@ kc restart <connector> [--include-tasks] [--only-failed]
 ###### Restart all connectors
 
 ```bash
-kc restart --all-connectors [--connector-pattern=regex]
+kc restart --all-connectors [--connector-pattern=regex] [--include-tasks] [--only-failed]
 ```
 
 ###### Pause a connector
