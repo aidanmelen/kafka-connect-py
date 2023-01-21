@@ -52,7 +52,7 @@ def get_logger(log_level="NOTSET"):
     return logger
 
 @click.group(cls=CatchAllExceptions)
-@click.version_option()
+@click.version_option(package_name='kafka-connect-py', prog_name="kc|kafka-connect")
 @click.option('--endpoint', '-e', default='http://localhost:8083', metavar="URL", envvar='KAFKA_CONNECT_ENDPOINT', show_envvar=True, help='The base URL for the Kafka Connect REST API.')
 @click.option('--auth', '-a', metavar="USERNAME:PASSWORD", envvar='KAFKA_CONNECT_BASIC_AUTH', show_envvar=True, help='A colon-delimited string of `username` and `password` to use for authenticating with the Kafka Connect REST API.')
 @click.option('--ssl-verify/--no-ssl-verify', '-s', default=True, is_flag=True, envvar='KAFKA_CONNECT_SSL_VERIFY', show_envvar=True, help='Whether to verify the SSL certificate when making requests to the Kafka Connect REST API.')
