@@ -135,7 +135,7 @@ kc delete --all-connectors [--connector-pattern=regex]
 from kafka_connect import KafkaConnect
 
 # Instantiate the client
-client = KafkaConnect(endpoint="http://localhost:8083")
+client = KafkaConnect(url="http://localhost:8083")
 
 # Get the version and other details of the Kafka Connect cluster
 cluster = client.get_info()

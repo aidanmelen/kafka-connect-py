@@ -53,15 +53,15 @@ def get_logger(log_level="NOTSET"):
 
 @click.group(cls=CatchAllExceptions)
 @click.version_option(package_name='kafka-connect-py', prog_name="kc|kafka-connect")
-@click.option('--endpoint', '-e', default='http://localhost:8083', metavar="URL", envvar='KAFKA_CONNECT_ENDPOINT', show_envvar=True, help='The base URL for the Kafka Connect REST API.')
+@click.option('--url', '-u', default='http://localhost:8083', metavar="URL", envvar='KAFKA_CONNECT_URL', show_envvar=True, help='The base URL for the Kafka Connect REST API.')
 @click.option('--auth', '-a', metavar="USERNAME:PASSWORD", envvar='KAFKA_CONNECT_BASIC_AUTH', show_envvar=True, help='A colon-delimited string of `username` and `password` to use for authenticating with the Kafka Connect REST API.')
 @click.option('--ssl-verify/--no-ssl-verify', '-s', default=True, is_flag=True, envvar='KAFKA_CONNECT_SSL_VERIFY', show_envvar=True, help='Whether to verify the SSL certificate when making requests to the Kafka Connect REST API.')
 @click.option('--log-level', '-l', default='NOTSET', metavar="LEVEL", envvar='KAFKA_CONNECT_LOG_LEVEL', show_envvar=True, help='The logging level to use for the logger and console handler.')
 @click.pass_context
-def cli(ctx, endpoint, auth, ssl_verify, log_level):
+def cli(ctx, url, auth, ssl_verify, log_level):
     """A command-line client for the Confluent Platform Kafka Connect REST API."""
     logger = get_logger(log_level)
-    kafka_connect = KafkaConnect(endpoint, auth, ssl_verify, logger)
+    kafka_connect = KafkaConnect(url, auth, ssl_verify, logger)
     ctx.obj = kafka_connect
 
 @cli.command()
@@ -72,7 +72,7 @@ def info(kafka_connect):
     click.echo(json.dumps(cluster))
 
 @cli.command()
-@click.option('-x', '--expand', type=click.Choice(['status', 'info']), envvar='KAFKA_CONNECT_LIST_EXPAND', show_envvar=True, help='Whether to retrieve additional information about the connectors.')
+@click.option('-e', '--expand', type=click.Choice(['status', 'info']), envvar='KAFKA_CONNECT_LIST_EXPAND', show_envvar=True, help='Whether to retrieve additional information about the connectors.')
 @click.option('-p', '--connector-pattern', default=None, metavar="REGEX", envvar='KAFKA_CONNECT_LIST_CONNECTOR_PATTERN', show_envvar=True, help='The regex pattern that will list only the connectors that match when the --expand option is set.')
 @click.pass_obj
 def list(kafka_connect, expand, connector_pattern):
