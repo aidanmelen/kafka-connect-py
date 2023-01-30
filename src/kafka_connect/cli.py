@@ -3,6 +3,7 @@ from .kafka_connect import KafkaConnect
 import click
 import json
 import logging
+import time
 
 
 class CatchAllExceptions(click.Group):
@@ -51,7 +52,8 @@ def get_logger(log_level="NOTSET"):
 
     return logger
 
-@click.group(cls=CatchAllExceptions)
+@click.group()
+# @click.group(cls=CatchAllExceptions)
 @click.version_option(package_name='kafka-connect-py', prog_name="kc|kafka-connect")
 @click.option('--url', '-u', default='http://localhost:8083', metavar="URL", envvar='KAFKA_CONNECT_URL', show_envvar=True, help='The base URL for the Kafka Connect REST API.')
 @click.option('--auth', '-a', metavar="USERNAME:PASSWORD", envvar='KAFKA_CONNECT_BASIC_AUTH', show_envvar=True, help='A colon-delimited string of `username` and `password` to use for authenticating with the Kafka Connect REST API.')
@@ -73,26 +75,26 @@ def info(kafka_connect):
 
 @cli.command()
 @click.option('-e', '--expand', type=click.Choice(['status', 'info']), envvar='KAFKA_CONNECT_LIST_EXPAND', show_envvar=True, help='Whether to retrieve additional information about the connectors.')
-@click.option('-p', '--connector-pattern', default=None, metavar="REGEX", envvar='KAFKA_CONNECT_LIST_CONNECTOR_PATTERN', show_envvar=True, help='The regex pattern that will list only the connectors that match when the --expand option is set.')
+@click.option('-p', '--pattern', default=None, metavar="REGEX", envvar='KAFKA_CONNECT_LIST_CONNECTOR_PATTERN', show_envvar=True, help='The regex pattern that will list only the connectors that match when the --expand option is set.')
 @click.pass_obj
-def list(kafka_connect, expand, connector_pattern):
+def list(kafka_connect, expand, pattern):
     """Get a list of active connectors."""
-    response = kafka_connect.list_connectors(expand=expand, connector_pattern=connector_pattern)
+    response = kafka_connect.list_connectors(expand=expand, pattern=pattern)
     click.echo(json.dumps(response))
 
 @cli.command()
 @click.argument('connector', required=False)
-@click.option('-a', '--all-connectors', is_flag=True, default=False, envvar='KAFKA_CONNECT_CONFIG_ALL', show_envvar=True, help='Whether to get config for all connectors.')
-@click.option('-p', '--connector-pattern', default=None, metavar="REGEX", envvar='KAFKA_CONNECT_CONFIG_ALL_CONNECTOR_PATTERN', show_envvar=True, help='The regex pattern that will restart only the connectors that match when the --all-connectors option is set.')
+@click.option('-a', '--all', is_flag=True, default=False, envvar='KAFKA_CONNECT_CONFIG_ALL', show_envvar=True, help='Whether to get config for all connectors.')
+@click.option('-p', '--pattern', default=None, metavar="REGEX", envvar='KAFKA_CONNECT_CONFIG_ALL_PATTERN', show_envvar=True, help='The regex pattern that will restart only the connectors that match when the --all option is set.')
 @click.pass_obj
-def get(kafka_connect, connector, all_connectors, connector_pattern):
+def get(kafka_connect, connector, all, pattern):
     """Gets the details of a connector or all connectors matching a certain pattern."""
-    if all_connectors:
-        response = kafka_connect.get_all_connectors(connector_pattern=connector_pattern)
+    if all:
+        response = kafka_connect.get_all(pattern=pattern)
     elif connector:
         response = kafka_connect.get_connector(connector)
     else:
-        raise click.UsageError('One of connector or --all-connectors is required')
+        raise click.UsageError('One of connector or --all is required')
     click.echo(json.dumps(response))
 
 @cli.command()
@@ -129,98 +131,93 @@ def update(kafka_connect, connector, config_file, config_data):
 
 @cli.command()
 @click.argument('connector', required=False)
-@click.option('-a', '--all-connectors', is_flag=True, default=False, envvar='KAFKA_CONNECT_CONFIG_ALL', show_envvar=True, help='Whether to get config for all connectors.')
-@click.option('-p', '--connector-pattern', default=None, metavar="REGEX", envvar='KAFKA_CONNECT_CONFIG_ALL_CONNECTOR_PATTERN', show_envvar=True, help='The regex pattern that will restart only the connectors that match when the --all-connectors option is set.')
 @click.pass_obj
-def config(kafka_connect, connector, all_connectors, connector_pattern):
-    """Gets the config of a connector or all connectors matching a certain pattern."""
-    if all_connectors:
-        response = kafka_connect.get_all_connector_configs(connector_pattern=connector_pattern)
-    elif connector:
-        response = kafka_connect.get_connector_config(connector)
-    else:
-        raise click.UsageError('One of connector or --all-connectors is required')
+def config(kafka_connect, connector):
+    """Gets the config of a connector."""
+    response = kafka_connect.get_connector_config(connector)
     click.echo(json.dumps(response))
 
 @cli.command()
 @click.argument('connector', required=False)
-@click.option('-a', '--all-connectors', is_flag=True, default=False, envvar='KAFKA_CONNECT_RESTART_ALL', show_envvar=True, help='Whether to get status for all connectors.')
-@click.option('-p', '--connector-pattern', default=None, metavar="REGEX", envvar='KAFKA_CONNECT_RESTART_ALL_CONNECTOR_PATTERN', show_envvar=True, help='The regex pattern that will restart only the connectors that match when the --all-connectors option is set.')
 @click.pass_obj
-def status(kafka_connect, connector, all_connectors, connector_pattern):
-    """Gets the status of a connector or all connectors matching a certain pattern."""
-    if all_connectors:
-        response = kafka_connect.get_all_connector_statuses(connector_pattern=connector_pattern)
-    elif connector:
-        response = kafka_connect.get_connector_status(connector)
-    else:
-        raise click.UsageError('One of connector or --all-connectors is required')
+def status(kafka_connect, connector):
+    """Gets the status of a connector."""
+    response = kafka_connect.get_connector_status(connector)
     click.echo(json.dumps(response))
 
 @cli.command()
 @click.argument('connector', required=False)
 @click.option('-i', '--include-tasks', is_flag=True, default=False, envvar='KAFKA_CONNECT_INCLUDE_TASKS', show_envvar=True, help='Whether to include the Task objects in the restart operation.')
 @click.option('-o', '--only-failed', is_flag=True, default=False, envvar='KAFKA_CONNECT_ONLY_FAILED', show_envvar=True, help='Whether to restart only failed Task objects.')
-@click.option('-a', '--all-connectors', is_flag=True, default=False, envvar='KAFKA_CONNECT_RESTART_ALL', show_envvar=True, help='Whether to restart all connectors.')
-@click.option('-p', '--connector-pattern', default=None, metavar="REGEX", envvar='KAFKA_CONNECT_RESTART_ALL_CONNECTOR_PATTERN', show_envvar=True, help='The regex pattern that will restart only the connectors that match when the --all-connectors option is set.')
+@click.option('-a', '--all', is_flag=True, default=False, envvar='KAFKA_CONNECT_RESTART_ALL', show_envvar=True, help='Whether to restart all connectors.')
+@click.option('-p', '--pattern', default=None, metavar="REGEX", envvar='KAFKA_CONNECT_RESTART_ALL_PATTERN', show_envvar=True, help='The regex pattern that will restart only the connectors that match when the --all option is set.')
 @click.pass_obj
-def restart(kafka_connect, connector, include_tasks, only_failed, all_connectors, connector_pattern):
+def restart(kafka_connect, connector, include_tasks, only_failed, all, pattern):
     """Restart a connector or all connectors matching a certain pattern."""
-    if all_connectors:
-        response = kafka_connect.restart_all_connectors(include_tasks=include_tasks, only_failed=only_failed, connector_pattern=connector_pattern)
+    if all:
+        response = kafka_connect.restart_all_connectors(include_tasks=include_tasks, only_failed=only_failed, pattern=pattern)
+        time.sleep(.1)
+        click.echo(json.dumps(kafka_connect.list_connectors(expand="status", pattern=pattern)))
     elif connector:
         response = kafka_connect.restart_connector(connector, include_tasks=include_tasks, only_failed=only_failed)
+        time.sleep(.1)
+        click.echo(json.dumps(kafka_connect.get_connector_status(connector)))
     else:
-        raise click.UsageError('One of connector or --all-connectors is required')
-    click.echo(json.dumps(response))
+        raise click.UsageError('One of connector or --all is required')
 
 @cli.command()
 @click.argument('connector', required=False)
-@click.option('-a', '--all-connectors', is_flag=True, default=False, envvar='KAFKA_CONNECT_PAUSE_ALL', show_envvar=True, help='Whether to pause all connectors.')
-@click.option('-p', '--connector-pattern', default=None, metavar="REGEX", envvar='KAFKA_CONNECT_PAUSE_CONNECTOR_PATTERN', show_envvar=True, help='The regex pattern that will pause only the connectors that match when the --all-connectors option is set.')
+@click.option('-a', '--all', is_flag=True, default=False, envvar='KAFKA_CONNECT_PAUSE_ALL', show_envvar=True, help='Whether to pause all connectors.')
+@click.option('-p', '--pattern', default=None, metavar="REGEX", envvar='KAFKA_CONNECT_PAUSE_CONNECTOR_PATTERN', show_envvar=True, help='The regex pattern that will pause only the connectors that match when the --all option is set.')
 @click.pass_obj
-def pause(kafka_connect, connector, all_connectors, connector_pattern):
+def pause(kafka_connect, connector, all, pattern):
     """Pauses a connector or all connectors that match a certain pattern."""
-    if all_connectors:
-        response = kafka_connect.pause_all_connectors(connector_pattern=connector_pattern)
+    if all:
+        response = kafka_connect.pause_all_connectors(pattern=pattern)
+        time.sleep(.1)
+        click.echo(json.dumps(kafka_connect.list_connectors(expand="status", pattern=pattern)))
     elif connector:
         response = kafka_connect.pause_connector(connector)
+        time.sleep(.1)
+        click.echo(json.dumps(kafka_connect.get_connector_status(connector)))
     else:
-        raise click.UsageError('One of connector or --all-connectors is required')
-    click.echo(json.dumps(response))
+        raise click.UsageError('One of connector or --all is required')
 
 
 @cli.command()
 @click.argument('connector', required=False)
-@click.option('-a', '--all-connectors', is_flag=True, default=False, envvar='KAFKA_CONNECT_RESUME_ALL', show_envvar=True, help='Whether to resume all connectors.')
-@click.option('-p', '--connector-pattern', default=None, metavar="REGEX", envvar='KAFKA_CONNECT_RESUME_CONNECTOR_PATTERN', show_envvar=True, help='The regex pattern that will resume only the connectors that match when the --all-connectors option is set.')
+@click.option('-a', '--all', is_flag=True, default=False, envvar='KAFKA_CONNECT_RESUME_ALL', show_envvar=True, help='Whether to resume all connectors.')
+@click.option('-p', '--pattern', default=None, metavar="REGEX", envvar='KAFKA_CONNECT_RESUME_CONNECTOR_PATTERN', show_envvar=True, help='The regex pattern that will resume only the connectors that match when the --all option is set.')
 @click.pass_obj
-def resume(kafka_connect, connector, all_connectors, connector_pattern):
+def resume(kafka_connect, connector, all, pattern):
     """Resumes a connector or all connectors that match a certain pattern."""
-    if all_connectors:
-        response = kafka_connect.resume_all_connectors(connector_pattern=connector_pattern)
+    if all:
+        response = kafka_connect.resume_all_connectors(pattern=pattern)
+        time.sleep(.1)
+        click.echo(json.dumps(kafka_connect.list_connectors(expand="status", pattern=pattern)))
     elif connector:
         response = kafka_connect.resume_connector(connector)
+        time.sleep(.1)
+        click.echo(json.dumps(kafka_connect.get_connector_status(connector)))
     else:
-        raise click.UsageError('One of connector or --all-connectors is required')
-    click.echo(json.dumps(response))
+        raise click.UsageError('One of connector or --all is required')
 
 
 @cli.command()
 @click.argument('connector', required=False)
-@click.option('-a', '--all-connectors', is_flag=True, default=False, envvar='KAFKA_CONNECT_DELETE_ALL', show_envvar=True, help='Whether to delete all connectors.')
-@click.option('-p', '--connector-pattern', default=None, metavar="REGEX", envvar='KAFKA_CONNECT_DELETE_CONNECTOR_PATTERN', show_envvar=True, help='The regex pattern that will delete only the connectors that match when the --all-connectors option is set.')
+@click.option('-a', '--all', is_flag=True, default=False, envvar='KAFKA_CONNECT_DELETE_ALL', show_envvar=True, help='Whether to delete all connectors.')
+@click.option('-p', '--pattern', default=None, metavar="REGEX", envvar='KAFKA_CONNECT_DELETE_CONNECTOR_PATTERN', show_envvar=True, help='The regex pattern that will delete only the connectors that match when the --all option is set.')
 @click.pass_obj
-def delete(kafka_connect, connector, all_connectors, connector_pattern):
+def delete(kafka_connect, connector, all, pattern):
     """Deletes a connector or all connectors that match a certain pattern."""
-    if all_connectors:
-        response = kafka_connect.delete_all_connectors(connector_pattern=connector_pattern)
-        click.echo(json.dumps([{"name": conn, "state": "deleted"} for conn in response.keys()]))
+    if all:
+        response = kafka_connect.delete_all_connectors(pattern=pattern)
+        click.echo(json.dumps([{"name": conn, "state": "DELETED"} for conn in response.keys()]))
     elif connector:
         response = kafka_connect.delete_connector(connector)
-        click.echo(json.dumps({"name": connector, "state": "deleted"}))
+        click.echo(json.dumps({"name": connector, "state": "DELETED"}))
     else:
-        raise click.UsageError('One of connector or --all-connectors is required')
+        raise click.UsageError('One of connector or --all is required')
 
 @cli.command()
 @click.argument('connector')
