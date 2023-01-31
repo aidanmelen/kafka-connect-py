@@ -178,5 +178,5 @@ print(response)
 ## Tests
 
 ```
-python3 -m unittest tests/test_kafka_connect.py -v
+poetry run python3 -m unittest tests/test_kafka_connect.py -v
 ```

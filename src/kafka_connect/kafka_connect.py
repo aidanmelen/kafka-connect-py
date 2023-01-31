@@ -6,7 +6,7 @@ import re
 import requests
 
 
-class KafkaConnect():
+class KafkaConnect:
     """A client for the Confluent Platform Kafka Connect REST API.
     Args:
         url (str): The base URL for the Kafka Connect REST API.
@@ -14,15 +14,20 @@ class KafkaConnect():
         ssl_verify (bool): Whether to verify the SSL certificate when making requests to the Kafka Connect REST API. Defaults to True.
         logger (logging.Logger): The logger to be used. If not specified, a new logger will be created.
     """
-    def __init__(self, url="http://localhost:8083", auth=None, ssl_verify=True, logger=None):
+
+    def __init__(
+        self, url="http://localhost:8083", auth=None, ssl_verify=True, logger=None
+    ):
         self.url = url
         self.headers = {"Content-Type": "application/json"}
 
         # Split the auth string into username and password and store them as a tuple
         if auth:
-            if ':' not in auth:
-                raise ValueError("Invalid auth string. Expected a colon-delimited string of `username` and `password`.")
-            username, password = auth.split(':')
+            if ":" not in auth:
+                raise ValueError(
+                    "Invalid auth string. Expected a colon-delimited string of `username` and `password`."
+                )
+            username, password = auth.split(":")
             self.auth = (username.strip(), password.strip())
         else:
             self.auth = None
@@ -30,6 +35,7 @@ class KafkaConnect():
         # If ssl_verify is False, disable SSL warnings
         if not ssl_verify:
             import urllib3
+
             urllib3.disable_warnings()
         self.verify = ssl_verify
 
@@ -57,9 +63,15 @@ class KafkaConnect():
         if not pattern:
             filtered_connectors = connectors
         elif isinstance(connectors, list):
-            filtered_connectors = [conn for conn in connectors if re.match(pattern, conn)]
+            filtered_connectors = [
+                conn for conn in connectors if re.match(pattern, conn)
+            ]
         elif isinstance(connectors, dict):
-            filtered_connectors = {conn:data for conn, data in connectors.items() if re.match(pattern, conn)}
+            filtered_connectors = {
+                conn: data
+                for conn, data in connectors.items()
+                if re.match(pattern, conn)
+            }
         return filtered_connectors
 
     def list_connectors(self, expand=None, pattern=None):
@@ -80,19 +92,6 @@ class KafkaConnect():
 
         return self.__filter(connectors, pattern)
     
-    def get_connector(self, connector):
-        """Get the details of a single connector.
-        Args:
-            connector (str): The name of the connector.
-        Returns:
-            Dict[str, Any]: The details of the connector.
-        """
-        self.logger.info(f"Getting connector: {connector}")
-        url = f"{self.url}/connectors/{connector}"
-        response = requests.get(url, auth=self.auth, verify=self.verify)
-        response.raise_for_status()
-        return response.json()
-
     def create_connector(self, config):
         """Create a new connector.
         Args:
@@ -104,11 +103,17 @@ class KafkaConnect():
         """
         self.logger.info(f"Creating connector: {config.get('name')}")
         url = f"{self.url}/connectors"
-        response = requests.post(url, auth=self.auth, verify=self.verify, headers=self.headers, data=json.dumps(config))
-        
+        response = requests.post(
+            url,
+            auth=self.auth,
+            verify=self.verify,
+            headers=self.headers,
+            data=json.dumps(config),
+        )
+
         if response.status_code == 409:
             self.logger.error("Connector already exists or rebalance is in process.")
-        
+
         response.raise_for_status()
         try:
             data = response.json()
@@ -124,13 +129,21 @@ class KafkaConnect():
         Returns:
             Dict[str, Any]: The response from the REST API, or an empty dictionary if the response is null or if there is a JSONDecodeError.
         """
-    
-        if "config" in config:
-            self.logger.error('The payload is not wrapped in {"config": {}} as in the POST request. The config is directly provided.')
 
-        self.logger.info(f"Updating connector: {connector}")
+        if "config" in config:
+            self.logger.error(
+                'The payload is not wrapped in {"config": {}} as in the POST request. The config is directly provided.'
+            )
+
+        self.logger.info(f"Updating {connector} connector")
         url = f"{self.url}/connectors/{connector}/config"
-        response = requests.put(url, headers=self.headers, auth=self.auth, verify=self.verify, data=json.dumps(config))
+        response = requests.put(
+            url,
+            headers=self.headers,
+            auth=self.auth,
+            verify=self.verify,
+            data=json.dumps(config),
+        )
 
         if response.status_code == 409:
             self.logger.error("Connector rebalance is in process.")
@@ -143,6 +156,19 @@ class KafkaConnect():
         except JSONDecodeError:
             data = None
         return data
+
+    def get_connector(self, connector):
+        """Get the details of a single connector.
+        Args:
+            connector (str): The name of the connector.
+        Returns:
+            Dict[str, Any]: The details of the connector.
+        """
+        self.logger.info(f"Getting {connector} connector")
+        url = f"{self.url}/connectors/{connector}"
+        response = requests.get(url, auth=self.auth, verify=self.verify)
+        response.raise_for_status()
+        return response.json()
 
     def get_connector_config(self, connector):
         """Get the configuration of a single connector.
@@ -180,24 +206,21 @@ class KafkaConnect():
         Returns:
             Dict[str, Any]: The response from the REST API, or an empty dictionary if the response is null or if there is a JSONDecodeError.
         """
-        self.logger.info(f"Restarting connector: {connector}")
+        self.logger.info(f"Restarting {connector} connector")
         url = f"{self.url}/connectors/{connector}/restart"
         params = {"includeTasks": include_tasks, "onlyFailed": only_failed}
         response = requests.post(url, auth=self.auth, verify=self.verify, params=params)
-        try:
-            data = response.json()
-        except JSONDecodeError:
-            data = None
-        
+
         if response.status_code == 200:
             self.logger.info("Connector restarted successfully.")
-            return data
+            return response.json()
         elif response.status_code == 202:
             self.logger.info("Connector restart request accepted.")
-            return data
+            return response.json()
         elif response.status_code == 204:
-            self.logger.info("Connector restart request successful, but no response body returned.")
-            return data
+            self.logger.info(
+                "Connector restart request successful, but no response body returned."
+            )
         elif response.status_code == 404:
             self.logger.error("Connector not found.")
             raise HTTPError(response.text)
@@ -207,11 +230,12 @@ class KafkaConnect():
         elif response.status_code == 500:
             self.logger.error("Connector restart request timed out.")
             raise HTTPError(response.text)
-        
+
         response.raise_for_status()
-        return data
-    
-    def restart_all_connectors(self, include_tasks=False, only_failed=False, pattern=None):
+
+    def restart_all_connectors(
+        self, include_tasks=False, only_failed=False, pattern=None
+    ):
         """Restart all connectors.
         Args:
             include_tasks (bool): Whether to include tasks when restarting the connector. Default is False.
@@ -220,7 +244,9 @@ class KafkaConnect():
         Returns:
             Dict[str, Dict[str, Any]]: A dictionary of responses, where the keys are the connector names and the values are the responses.
         """
-        self.logger.info(f"Restarting all connectors{' matching the pattern: ' + pattern if pattern else ''}")
+        self.logger.info(
+            f"Restarting all connectors{' matching the pattern: ' + pattern if pattern else ''}"
+        )
         responses = {}
         connectors = self.__filter(self.list_connectors(expand="status"), pattern)
         for connector, status in connectors.items():
@@ -233,16 +259,13 @@ class KafkaConnect():
         Returns:
             Dict[str, Any]: The response from the REST API, or an empty dictionary if the response is null or if there is a JSONDecodeError.
         """
-        self.logger.info(f"Pausing connector: {connector}")
+        self.logger.info(f"Pausing {connector} connector")
         url = f"{self.url}/connectors/{connector}/pause"
         response = requests.put(url, auth=self.auth, verify=self.verify)
+        if response.status_code == 202:
+            self.logger.info("Connector pause successful, but no response body returned.")
         response.raise_for_status()
-        try:
-            data = response.json()
-        except JSONDecodeError:
-            data = None
-        return data
-    
+
     def pause_all_connectors(self, pattern=None):
         """Pause all connectors.
         Args:
@@ -250,7 +273,9 @@ class KafkaConnect():
         Returns:
             Dict[str, Dict[str, Any]]: A dictionary of responses, where the keys are the connector names and the values are the responses.
         """
-        self.logger.info(f"Pausing all running connectors{' matching the pattern: ' + pattern if pattern else ''}")
+        self.logger.info(
+            f"Pausing all running connectors{' matching the pattern: ' + pattern if pattern else ''}"
+        )
         connectors = self.__filter(self.list_connectors(expand="status"), pattern)
         for connector, status in connectors.items():
             self.pause_connector(connector)
@@ -262,15 +287,12 @@ class KafkaConnect():
         Returns:
             Dict[str, Any]: The response from the REST API, or an empty dictionary if the response is null or if there is a JSONDecodeError.
         """
-        self.logger.info(f"Resuming connector: {connector}")
+        self.logger.info(f"Resuming {connector} connector")
         url = f"{self.url}/connectors/{connector}/resume"
         response = requests.put(url, auth=self.auth, verify=self.verify)
+        if response.status_code == 202:
+            self.logger.debug("Connector resumed successful, but no response body returned.")
         response.raise_for_status()
-        try:
-            data = response.json()
-        except JSONDecodeError:
-            data = None
-        return data
 
     def resume_all_connectors(self, pattern=None):
         """Resume all connectors.
@@ -279,7 +301,9 @@ class KafkaConnect():
         Returns:
             Dict[str, Dict[str, Any]]: A dictionary of responses, where the keys are the connector names and the values are the responses.
         """
-        self.logger.info(f"Resuming all paused connectors{' matching the pattern: ' + pattern if pattern else ''}")
+        self.logger.info(
+            f"Resuming all paused connectors{' matching the pattern: ' + pattern if pattern else ''}"
+        )
         connectors = self.__filter(self.list_connectors(expand="status"), pattern)
         for connector, status in connectors.items():
             self.resume_connector(connector)
@@ -291,16 +315,13 @@ class KafkaConnect():
         Returns:
             Dict[str, Any]: The response from the REST API, or an empty dictionary if the response is null or if there is a JSONDecodeError.
         """
-        self.logger.info(f"Deleting connector: {connector}")
+        self.logger.info(f"Deleting {connector} connector")
         url = f"{self.url}/connectors/{connector}"
         response = requests.delete(url, auth=self.auth, verify=self.verify)
+        if response.status_code == 204:
+            self.logger.info("Connector resumed successful, but no content returned.")
         response.raise_for_status()
-        try:
-            data = response.json()
-        except JSONDecodeError:
-            data = None
-        return data
-    
+
     def delete_all_connectors(self, pattern=None):
         """Delete all connectors.
         Args:
@@ -308,7 +329,9 @@ class KafkaConnect():
         Returns:
             Dict[str, Dict[str, Any]]: A dictionary of responses, where the keys are the connector names and the values are the responses.
         """
-        self.logger.info(f"Deleting all connectors{' matching the pattern: ' + pattern if pattern else ''}")
+        self.logger.info(
+            f"Deleting all connectors{' matching the pattern: ' + pattern if pattern else ''}"
+        )
         connectors = self.__filter(self.list_connectors(expand="status"), pattern)
         for connector, status in connectors.items():
             self.delete_connector(connector)
@@ -320,7 +343,7 @@ class KafkaConnect():
         Returns:
             List[int]: The list of task IDs for the connector.
         """
-        self.logger.info(f"Getting tasks for connector: {connector}")
+        self.logger.info(f"Getting tasks for {connector} connector")
         url = f"{self.url}/connectors/{connector}/tasks"
         response = requests.get(url, auth=self.auth, verify=self.verify)
         response.raise_for_status()
@@ -334,7 +357,9 @@ class KafkaConnect():
         Returns:
             Dict[str, Any]: The response from the REST API.
         """
-        self.logger.info(f"Getting task status for connector: {connector} and task_id: {task_id}")
+        self.logger.info(
+            f"Getting task status for {task_id} task for {connector} connector"
+        )
         url = f"{self.url}/connectors/{connector}/tasks/{task_id}/status"
         response = requests.get(url, auth=self.auth, verify=self.verify)
         response.raise_for_status()
@@ -348,15 +373,12 @@ class KafkaConnect():
         Returns:
             Dict[str, Any]: The response from the REST API, or an empty dictionary if the response is null or if there is a JSONDecodeError.
         """
-        self.logger.info(f"Restarting task {task_id} of connector: {connector}")
+        self.logger.info(f"Restarting {task_id} task of {connector} connector")
         url = f"{self.url}/connectors/{connector}/tasks/{task_id}/restart"
         response = requests.post(url, auth=self.auth, verify=self.verify)
+        if response.status_code == 200:
+            self.logger.info("Connector topic names reset successful, but no response body returned.")
         response.raise_for_status()
-        try:
-            data = response.json()
-        except JSONDecodeError:
-            data = None
-        return data
 
     def list_connector_topics(self, connector):
         """Get the list of topics for a connector.
@@ -365,7 +387,7 @@ class KafkaConnect():
         Returns:
             List[str]: The list of topics for the connector.
         """
-        self.logger.info(f"Getting topics for connector: {connector}")
+        self.logger.info(f"Getting topics for {connector} connector")
         url = f"{self.url}/connectors/{connector}/topics"
         response = requests.get(url, auth=self.auth, verify=self.verify)
         response.raise_for_status()
@@ -378,15 +400,12 @@ class KafkaConnect():
         Returns:
             Dict[str, Any]: The response from the REST API, or an empty dictionary if the response is null or if there is a JSONDecodeError.
         """
-        self.logger.info(f"Resetting topics for connector: {connector}")
+        self.logger.info(f"Resetting topics for {connector} connector")
         url = f"{self.url}/connectors/{connector}/topics/reset"
         response = requests.put(url, auth=self.auth, verify=self.verify)
+        if response.status_code == 200:
+            self.logger.info("Connector topic names reset successful, but no response body returned.")
         response.raise_for_status()
-        try:
-            return response.json()
-        except JSONDecodeError:
-            data = None
-        return data
 
     def list_connector_plugins(self):
         """Get the list of connector plugins.
@@ -410,7 +429,13 @@ class KafkaConnect():
         """
         self.logger.info(f"Validating config for plugin: {plugin}")
         url = f"{self.url}/connector-plugins/{plugin}/config/validate"
-        response = requests.put(url, auth=self.auth, verify=self.verify, headers=self.headers, data=json.dumps(config))
+        response = requests.put(
+            url,
+            auth=self.auth,
+            verify=self.verify,
+            headers=self.headers,
+            data=json.dumps(config),
+        )
         response.raise_for_status()
         try:
             data = response.json()
