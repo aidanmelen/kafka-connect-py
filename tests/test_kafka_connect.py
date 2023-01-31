@@ -20,8 +20,27 @@ class TestKafkaConnect(unittest.TestCase):
         }
         result = self.kafka_connect.get_cluster_info()
         mock_requests.get.assert_called_with('http://localhost:8083', auth=None, verify=True)
+        mock_response.raise_for_status.assert_called_once()
         self.assertEqual(result, mock_response.json())
     
+    def test_filter_list(self):
+        connectors = ["my-jdbc-source", "my-hdfs-sink"]
+        pattern = ".*-source$"
+        filtered_connectors = self.kafka_connect._KafkaConnect__filter(connectors, pattern)
+        self.assertEqual(filtered_connectors, ["my-jdbc-source"])
+    
+    def test_filter_dict(self):
+        connectors = {"my-jdbc-source": {"type": "source"}, "my-hdfs-sink": {"type": "sink"}}
+        pattern = ".*-sink$"
+        filtered_connectors = self.kafka_connect._KafkaConnect__filter(connectors, pattern)
+        self.assertEqual(filtered_connectors, {"my-hdfs-sink": {"type": "sink"}})
+
+    def test_filter_no_pattern(self):
+        connectors = ["my-jdbc-source", "my-hdfs-sink"]
+        pattern = ""
+        filtered_connectors = self.kafka_connect._KafkaConnect__filter(connectors, pattern)
+        self.assertEqual(filtered_connectors, ["my-jdbc-source", "my-hdfs-sink"])
+
     @patch('kafka_connect.kafka_connect.requests')
     def test_list_connectors_with_no_expand(self, mock_requests):
         mock_response = mock_requests.get.return_value
@@ -33,13 +52,12 @@ class TestKafkaConnect(unittest.TestCase):
             'http://localhost:8083/connectors',
             auth=None, verify=True, params={'expand': None}
         )
-
+        mock_response.raise_for_status.assert_called_once()
         self.assertEqual(result, mock_response.json())
     
     @patch('kafka_connect.kafka_connect.requests')
     def test_list_connectors_with_expand_status(self, mock_requests):
         mock_response = mock_requests.get.return_value
-        mock_response.raise_for_status.return_value = None
         mock_response.json.return_value = {
             "FileStreamSinkConnectorConnector_0": {
                 "status": {
@@ -83,13 +101,12 @@ class TestKafkaConnect(unittest.TestCase):
             'http://localhost:8083/connectors',
             auth=None, verify=True, params={'expand': 'status'}
         )
-
+        mock_response.raise_for_status.assert_called_once()
         self.assertEqual(result, mock_response.json())
     
     @patch('kafka_connect.kafka_connect.requests')
     def test_list_connectors_with_expand_info(self, mock_requests):
         mock_response = mock_requests.get.return_value
-        mock_response.raise_for_status.return_value = None
         mock_response.json.return_value = {
             "FileStreamSinkConnectorConnector_0": {
                 "info": {
@@ -137,7 +154,7 @@ class TestKafkaConnect(unittest.TestCase):
             'http://localhost:8083/connectors',
             auth=None, verify=True, params={'expand': 'info'}
         )
-
+        mock_response.raise_for_status.assert_called_once()
         self.assertEqual(result, mock_response.json())
     
     @patch('kafka_connect.kafka_connect.requests')
@@ -185,7 +202,7 @@ class TestKafkaConnect(unittest.TestCase):
             auth=None, verify=True,
             headers={'Content-Type': 'application/json'}, data=json.dumps(config)
         )
-
+        mock_response.raise_for_status.assert_called_once()
         self.assertEqual(result, mock_response.json())
     
     @patch('kafka_connect.kafka_connect.requests')
@@ -230,13 +247,12 @@ class TestKafkaConnect(unittest.TestCase):
             auth=None, verify=True,
             headers={'Content-Type': 'application/json'}, data=json.dumps(config)
         )
-
+        mock_response.raise_for_status.assert_called_once()
         self.assertEqual(result, mock_response.json())
     
     @patch('kafka_connect.kafka_connect.requests')
     def test_get_connector(self, mock_requests):
         mock_response = mock_requests.get.return_value
-        mock_response.raise_for_status.return_value = None
         mock_response.json.return_value = {
             "name": "hdfs-sink-connector",
             "config": {
@@ -262,13 +278,12 @@ class TestKafkaConnect(unittest.TestCase):
             'http://localhost:8083/connectors/hdfs-sink-connector',
             auth=None, verify=True
         )
-
+        mock_response.raise_for_status.assert_called_once()
         self.assertEqual(result, mock_response.json())
     
     @patch('kafka_connect.kafka_connect.requests')
     def test_get_connector_config(self, mock_requests):
         mock_response = mock_requests.get.return_value
-        mock_response.raise_for_status.return_value = None
         mock_response.json.return_value = {
             "connector.class": "io.confluent.connect.hdfs.HdfsSinkConnector",
             "tasks.max": "10",
@@ -286,13 +301,12 @@ class TestKafkaConnect(unittest.TestCase):
             'http://localhost:8083/connectors/hdfs-sink-connector/config',
             auth=None, verify=True
         )
-
+        mock_response.raise_for_status.assert_called_once()
         self.assertEqual(result, mock_response.json())
     
     @patch('kafka_connect.kafka_connect.requests')
     def test_get_connector_status(self, mock_requests):
         mock_response = mock_requests.get.return_value
-        mock_response.raise_for_status.return_value = None
         mock_response.json.return_value = {
             "name": "hdfs-sink-connector",
             "connector": {
@@ -320,7 +334,7 @@ class TestKafkaConnect(unittest.TestCase):
             'http://localhost:8083/connectors/hdfs-sink-connector/status',
             auth=None, verify=True
         )
-
+        mock_response.raise_for_status.assert_called_once()
         self.assertEqual(result, mock_response.json())
     
     @patch('kafka_connect.kafka_connect.requests')
@@ -352,7 +366,6 @@ class TestKafkaConnect(unittest.TestCase):
     @patch('kafka_connect.kafka_connect.requests')
     def test_restart_connector_with_only_failed(self, mock_requests):
         mock_response = mock_requests.post.return_value
-        mock_response.raise_for_status.return_value = None
         mock_response.status_code = 202
         mock_response.json.return_value = {
             "name": "my-connector",
@@ -386,7 +399,7 @@ class TestKafkaConnect(unittest.TestCase):
         mock_response = mock_requests.put.return_value
         connector_name = 'hdfs-sink-connector'
 
-        self.kafka_connect.pause_connector(connector_name)
+        result = self.kafka_connect.pause_connector(connector_name)
 
         mock_requests.put.assert_called_with(
             f'http://localhost:8083/connectors/{connector_name}/pause',
@@ -394,6 +407,7 @@ class TestKafkaConnect(unittest.TestCase):
             verify=True
         )
         mock_response.raise_for_status.assert_called_once()
+        self.assertEqual(result, None)
     
     @patch('kafka_connect.kafka_connect.requests')
     def test_resume_connector(self, mock_requests):
@@ -406,19 +420,209 @@ class TestKafkaConnect(unittest.TestCase):
             auth=None, verify=True
         )
         mock_response.raise_for_status.assert_called_once()
+        self.assertEqual(result, None)
     
     @patch('kafka_connect.kafka_connect.requests')
     def test_delete_connector(self, mock_requests):
         mock_response = mock_requests.delete.return_value
         connector_name = 'hdfs-sink-connector'
 
-        self.kafka_connect.delete_connector(connector_name)
+        result = self.kafka_connect.delete_connector(connector_name)
 
         mock_requests.delete.assert_called_with(
             f'http://localhost:8083/connectors/{connector_name}',
             auth=None, verify=True
         )
         mock_response.raise_for_status.assert_called_with()
+        self.assertEqual(result, None)
+    
+    @patch('kafka_connect.kafka_connect.requests')
+    def test_list_connector_tasks(self, mock_requests):
+        connector_name = "hdfs-sink-connector"
+        mock_response = mock_requests.get.return_value
+        mock_response.json.return_value = [
+            {
+                "id": {
+                    "connector": connector_name,
+                    "task": 0
+                },
+                "config": {
+                    "task.class": "io.confluent.connect.hdfs.HdfsSinkTask",
+                    "topics": "test-topic",
+                    "hdfs.url": "hdfs://fakehost:9000",
+                    "hadoop.conf.dir": "/opt/hadoop/conf",
+                    "hadoop.home": "/opt/hadoop",
+                    "flush.size": "100",
+                    "rotate.interval.ms": "1000"
+                }
+            }
+        ]
+
+        result = self.kafka_connect.list_connector_tasks(connector_name)
+
+        mock_requests.get.assert_called_with(
+            f'http://localhost:8083/connectors/{connector_name}/tasks',
+            auth=None, verify=True
+        )
+        mock_response.raise_for_status.assert_called_with()
+        self.assertEqual(result, mock_response.json())
+    
+    @patch('kafka_connect.kafka_connect.requests')
+    def test_get_connector_task_status(self, mock_requests):
+        mock_response = mock_requests.get.return_value
+        mock_response.json.return_value = {
+            "state": "RUNNING",
+            "id": 1,
+            "worker_id": "192.168.86.101:8083"
+        }
+
+        result = self.kafka_connect.get_connector_task_status("hdfs-sink-connector", 1)
+
+        mock_requests.get.assert_called_with(
+            'http://localhost:8083/connectors/hdfs-sink-connector/tasks/1/status',
+            auth=None, verify=True
+        )
+        mock_response.raise_for_status.assert_called_once()
+        self.assertEqual(result, mock_response.json())
+    
+    @patch('kafka_connect.kafka_connect.requests')
+    def test_restart_connector_task(self, mock_requests):
+        mock_response = mock_requests.post.return_value
+
+        result = self.kafka_connect.restart_connector_task("hdfs-sink-connector", 1)
+
+        mock_requests.post.assert_called_with(
+            'http://localhost:8083/connectors/hdfs-sink-connector/tasks/1/restart',
+            auth=None, verify=True
+        )
+        self.assertEqual(result, None)
+    
+    @patch('kafka_connect.kafka_connect.requests')
+    def test_list_connector_topics(self, mock_requests):
+        mock_response = mock_requests.get.return_value
+        mock_response.json.return_value = {
+            "hdfs-sink-connector": {
+                "topics": [
+                    "test-topic-1",
+                    "test-topic-2",
+                    "test-topic-3"
+                ]
+            }
+        }
+
+        result = self.kafka_connect.list_connector_topics("hdfs-sink-connector")
+
+        mock_requests.get.assert_called_with(
+            'http://localhost:8083/connectors/hdfs-sink-connector/topics',
+            auth=None, verify=True
+        )
+        mock_response.raise_for_status.assert_called_once()
+        self.assertEqual(result, mock_response.json())
+    
+    @patch('kafka_connect.kafka_connect.requests')
+    def reset_connector_topics(self, mock_requests):
+        mock_response = mock_requests.post.return_value
+
+        result = self.kafka_connect.reset_connector_topics("hdfs-sink-connector", 1)
+
+        mock_requests.post.assert_called_with(
+            'http://localhost:8083/connectors/hdfs-sink-connector/topics/reset',
+            auth=None, verify=True
+        )
+        self.assertEqual(result, None)
+
+    @patch('kafka_connect.kafka_connect.requests')
+    def test_list_connector_plugins(self, mock_requests):
+        mock_response = mock_requests.get.return_value
+        mock_response.json.return_value = [
+            {
+                "class": "io.confluent.connect.hdfs.HdfsSinkConnector"
+            },
+            {
+                "class": "io.confluent.connect.jdbc.JdbcSourceConnector"
+            }
+        ]
+
+
+        result = self.kafka_connect.list_connector_plugins()
+
+        mock_requests.get.assert_called_with(
+            'http://localhost:8083/connector-plugins',
+            auth=None, verify=True
+        )
+        mock_response.raise_for_status.assert_called_once()
+        self.assertEqual(result, mock_response.json())
+    
+    @patch('kafka_connect.kafka_connect.requests')
+    def test_validate_connector_config(self, mock_requests):
+        connector_class = "FileStreamSinkConnector"
+        config = {
+            "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
+            "tasks.max": "1",
+            "topics": "test-topic"
+        }
+
+        mock_response = mock_requests.put.return_value
+        mock_response.json.return_value = {
+            "name": "FileStreamSinkConnector",
+            "error_count": 1,
+            "groups": [
+                "Common"
+            ],
+            "configs": [
+                {
+                    "definition": {
+                        "name": "topics",
+                        "type": "LIST",
+                        "required": False,
+                        "default_value": "",
+                        "importance": "HIGH",
+                        "documentation": "",
+                        "group": "Common",
+                        "width": "LONG",
+                        "display_name": "Topics",
+                        "dependents": [],
+                        "order": 4
+                    },
+                    "value": {
+                        "name": "topics",
+                        "value": "test-topic",
+                        "recommended_values": [],
+                        "errors": [],
+                        "visible": True
+                    }
+                },
+                {
+                    "definition": {
+                        "name": "file",
+                        "type": "STRING",
+                        "required": True,
+                        "default_value": "",
+                        "importance": "HIGH",
+                        "documentation": "Destination filename.",
+                        "group": None,
+                        "width": "NONE",
+                        "display_name": "file",
+                        "dependents": [],
+                        "order": -1
+                    },
+                    "value": {}
+                }
+            ]
+        }
+
+        result = self.kafka_connect.validate_connector_config(connector_class, config)
+
+        mock_requests.put.assert_called_with(
+            f'http://localhost:8083/connector-plugins/{connector_class}/config/validate',
+            auth=None,
+            verify=True,
+            headers={'Content-Type': 'application/json'},
+            data=json.dumps(config)
+        )
+        mock_response.raise_for_status.assert_called_once()
+        self.assertEqual(result, mock_response.json())
+
 
 if __name__ == '__main__':
     unittest.main()

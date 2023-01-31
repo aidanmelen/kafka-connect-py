@@ -111,15 +111,11 @@ class KafkaConnect:
             data=json.dumps(config),
         )
 
+        response.raise_for_status()
         if response.status_code == 409:
             self.logger.error("Connector already exists or rebalance is in process.")
-
-        response.raise_for_status()
-        try:
-            data = response.json()
-        except JSONDecodeError:
-            data = None
-        return data
+        else:
+            return response.json()
 
     def update_connector(self, connector, config):
         """Update an existing connector.
@@ -145,17 +141,11 @@ class KafkaConnect:
             data=json.dumps(config),
         )
 
+        response.raise_for_status()
         if response.status_code == 409:
             self.logger.error("Connector rebalance is in process.")
         else:
             return response.json()
-
-        response.raise_for_status()
-        try:
-            data = response.json()
-        except JSONDecodeError:
-            data = None
-        return data
 
     def get_connector(self, connector):
         """Get the details of a single connector.
@@ -232,6 +222,7 @@ class KafkaConnect:
             raise HTTPError(response.text)
 
         response.raise_for_status()
+        return None
 
     def restart_all_connectors(
         self, include_tasks=False, only_failed=False, pattern=None
@@ -251,6 +242,7 @@ class KafkaConnect:
         connectors = self.__filter(self.list_connectors(expand="status"), pattern)
         for connector, status in connectors.items():
             self.restart_connector(connector, include_tasks, only_failed)
+        return None
 
     def pause_connector(self, connector):
         """Pause a single connector.
@@ -265,6 +257,7 @@ class KafkaConnect:
         if response.status_code == 202:
             self.logger.info("Connector pause successful, but no response body returned.")
         response.raise_for_status()
+        return None
 
     def pause_all_connectors(self, pattern=None):
         """Pause all connectors.
@@ -279,6 +272,7 @@ class KafkaConnect:
         connectors = self.__filter(self.list_connectors(expand="status"), pattern)
         for connector, status in connectors.items():
             self.pause_connector(connector)
+        return None
 
     def resume_connector(self, connector):
         """Resume a single connector.
@@ -293,6 +287,7 @@ class KafkaConnect:
         if response.status_code == 202:
             self.logger.debug("Connector resumed successful, but no response body returned.")
         response.raise_for_status()
+        return None
 
     def resume_all_connectors(self, pattern=None):
         """Resume all connectors.
@@ -307,6 +302,7 @@ class KafkaConnect:
         connectors = self.__filter(self.list_connectors(expand="status"), pattern)
         for connector, status in connectors.items():
             self.resume_connector(connector)
+        return None
 
     def delete_connector(self, connector):
         """Delete a single connector.
@@ -321,6 +317,7 @@ class KafkaConnect:
         if response.status_code == 204:
             self.logger.info("Connector resumed successful, but no content returned.")
         response.raise_for_status()
+        return None
 
     def delete_all_connectors(self, pattern=None):
         """Delete all connectors.
@@ -335,6 +332,7 @@ class KafkaConnect:
         connectors = self.__filter(self.list_connectors(expand="status"), pattern)
         for connector, status in connectors.items():
             self.delete_connector(connector)
+        return None
 
     def list_connector_tasks(self, connector):
         """Get the list of tasks for a connector.
@@ -379,6 +377,7 @@ class KafkaConnect:
         if response.status_code == 200:
             self.logger.info("Connector topic names reset successful, but no response body returned.")
         response.raise_for_status()
+        return None
 
     def list_connector_topics(self, connector):
         """Get the list of topics for a connector.
@@ -406,6 +405,7 @@ class KafkaConnect:
         if response.status_code == 200:
             self.logger.info("Connector topic names reset successful, but no response body returned.")
         response.raise_for_status()
+        return None
 
     def list_connector_plugins(self):
         """Get the list of connector plugins.
@@ -437,8 +437,4 @@ class KafkaConnect:
             data=json.dumps(config),
         )
         response.raise_for_status()
-        try:
-            data = response.json()
-        except JSONDecodeError:
-            data = None
-        return data
+        return response.json()
