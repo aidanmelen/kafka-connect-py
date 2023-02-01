@@ -12,102 +12,134 @@ This project aims to supported all features of the [Kafka Connect REST API](http
 pip install kafka-connect-py
 ```
 
+
 ## Command Line Usage
 
-Get the version and other details of the Kafka Connect cluster.
+This CLI tool is writen with [Python Click](https://click.palletsprojects.com/en/latest/). 
+
+#### Group options
+
+Connect to a custom endpoint.
+
+```bash
+kc --url https://connect.example.com <sub-command>
+```
+
+Connect with basic auth.
+
+```bash
+kc --auth="thisismyusername:thisismypass" <sub-command>
+```
+
+Connect with insecure SSL certificate.
+
+```bash
+kc --no-ssl-verify <sub-command>
+```
+
+Change log level.
+
+```bash
+kc --log-level=[critical|error|warning|info|debug|notset] <sub-command>
+```
+
+Please see [Click: Commands and Groups](https://click.palletsprojects.com/en/8.1.x/commands/#commands-and-groups) for more information.
+
+#### Get Kafka Connect cluster info
 
 ```bash
 kc info
 ```
 
-###### Get a list of all connectors
+#### Get a list of all connectors
 
 ```bash
-kc list [--expand=status|info] [--pattern=regex]
+kc list [--expand=status|info] [--pattern=regex] [--state=running|paused|unassigned|failed]
 ```
 
-###### Get the details of a single connector
+#### Get the details of a single connector
 
 ```bash
 kc get <connector>
 ```
 
-###### Get the config of a connector
+#### Get the config of a connector
 
 ```bash
 kc config <connector>
 ```
 
-###### Create a new connector with a JSON file
+#### Create a new connector with a JSON file
 
 ```bash
 kc create --config-file <config-file>
 ```
 
-###### Create a new connector with inline JSON data
+#### Create a new connector with inline JSON data
 
 ```bash
 kc create --config-data <config-data>
 ```
 
-###### Update the configuration for an existing connector with a JSON file
+#### Update the configuration for an existing connector with a JSON file
 
 ```bash
 kc update <connector> --config-file <config_file>
 ```
 
-###### Update the configuration for an existing connector with inline JSON data
+#### Update the configuration for an existing connector with inline JSON data
 
 ```bash
 kc create <connector> --config-data <config-data>
 ```
 
-###### Restart a connector
+#### Restart a connector
 
 ```bash
-kc restart <connector> [--include-tasks] [--only-failed]
+kc restart <connector> [--include-tasks] [--only-failed] | jq
 ```
 
-###### Restart all connectors
+#### Restart all connectors
 
 ```bash
-kc restart --all [--pattern=regex] [--include-tasks] [--only-failed]
+kc restart --all [--pattern=regex] [--state=running|paused|unassigned|failed] [--include-tasks] [--only-failed]
 ```
+The `state` targets the connector status whereas `--include-tasks` and `--only-failed` target connector tasks.
 
-###### Pause a connector
+#### Pause a connector
 
 ```bash
 kc pause <connector>
 ```
 
-###### Pause all connectors
+#### Pause all connectors
 
 ```bash
-kc pause --all [--pattern=regex]
+kc pause --all [--pattern=regex] [--state=running|paused|unassigned|failed]
 ```
 
-###### Resume a connector
+#### Resume a connector
 
 ```bash
 kc resume <connector>
 ```
 
-###### Resume all connectors
+#### Resume all connectors
 
 ```bash
-kc resume --all [--pattern=regex]
+kc resume --all [--pattern=regex] [--state=running|paused|unassigned|failed]
 ```
 
-###### Delete a connector
+#### Delete a connector
 
 ```bash
 kc delete <connector>
 ```
 
-###### Delete all connectors
+#### Delete all connectors
 
 ```bash
-kc delete --all [--pattern=regex]
+kc delete --all [--pattern=regex] [--state=running|paused|unassigned|failed]
 ```
 
 ### Python
@@ -116,16 +148,18 @@ kc delete --all [--pattern=regex]
 # Import the class
 from kafka_connect import KafkaConnect
 
+import json
+
 # Instantiate the client
 client = KafkaConnect(url="http://localhost:8083")
 
 # Get the version and other details of the Kafka Connect cluster
-cluster = client.get_info()
+cluster = client.get_cluster_info()
 print(cluster)
 
 # Get a list of active connectors
-connectors = client.get_connectors()
-print(connectors)
+connectors = client.list_connectors(expand="status")
+print(json.dumps(connectors, indent=2))
 
 # Create a new connector
 config = {
@@ -177,6 +211,6 @@ print(response)
 
 ## Tests
 
-```
+```bash
 python3 -m unittest tests/test_kafka_connect.py -v
 ```
