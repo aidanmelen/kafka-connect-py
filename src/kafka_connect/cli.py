@@ -6,6 +6,7 @@ import os
 import logging
 import requests
 import traceback
+import urllib3
 
 
 class CatchAllExceptions(click.Group):
@@ -19,8 +20,8 @@ class CatchAllExceptions(click.Group):
     def __call__(self, *args, **kwargs):
         try:
             return self.main(*args, **kwargs)
-        except requests.exceptions.HTTPError as re:
-            click.echo(re)
+        except (requests.exceptions.RequestException, urllib3.exceptions.HTTPError) as e:
+            click.echo(e)
         except Exception as e:
             if os.environ.get("KAFKA_CONNECT_ENABLE_TRACEBACK", "false").lower() == "true":
                 click.echo(traceback.print_exc())
