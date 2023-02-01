@@ -154,11 +154,11 @@ import json
 client = KafkaConnect(url="http://localhost:8083")
 
 # Get the version and other details of the Kafka Connect cluster
-cluster = client.get_info()
+cluster = client.get_cluster_info()
 print(cluster)
 
 # Get a list of active connectors
-connectors = client.list_connectors(expand="status)
+connectors = client.list_connectors(expand="status")
 print(json.dumps(connectors, indent=2))
 
 # Create a new connector

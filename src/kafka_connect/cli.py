@@ -4,7 +4,27 @@ import click
 import json
 import os
 import logging
+import requests
 import traceback
+
+
+class CatchAllExceptions(click.Group):
+    """A click group that catches all exceptions and displays them as a message.
+    This class extends the functionality of the `click.Group` class by adding
+    a try-except block around the call to `main()`. Any exceptions that are
+    raised during the call to `main()` are caught and displayed as a message
+    to the user.
+    """
+
+    def __call__(self, *args, **kwargs):
+        try:
+            return self.main(*args, **kwargs)
+        except requests.exceptions.HTTPError as re:
+            click.echo(re)
+        except Exception as e:
+            # click.echo("Oops, you found a bug! Please see consider opening an issue: https://github.com/aidanmelen/kafka-connect-py/issues")
+            click.echo(traceback.print_exc())
+
 
 def get_logger(log_level="NOTSET"):
     """Get a logger configured to write to the console.
@@ -40,7 +60,7 @@ def get_logger(log_level="NOTSET"):
     return logger
 
 
-@click.group()
+@click.group(cls=CatchAllExceptions)
 @click.version_option(package_name="kafka-connect-py", prog_name="kc|kafka-connect")
 @click.option(
     "--url",
