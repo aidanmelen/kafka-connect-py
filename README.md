@@ -15,7 +15,7 @@ pip install kafka-connect-py
 
 ## Command Line Usage
 
-This CLI tool is writen with [Python Click](https://click.palletsprojects.com/en/latest/). 
+This CLI tool is written with [Python Click](https://click.palletsprojects.com/en/latest/). 
 
 #### Group options
 
