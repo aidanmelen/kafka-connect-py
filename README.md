@@ -83,6 +83,10 @@ Or create/update a connector instance with a JSON file:
 kc update <connector> --config-file <config_file>
 ```
 
+### Update a Connector
+
+As mentioned above, if there’s a connector to update, you can use the `update` sub-command to amend the configuration (see [Create a Connector Instance](https://github.com/aidanmelen/kafka-connect-py/blob/main/README.md#create-a-connector-instance) above). Because update is used to both create and update connectors, it’s the standard command that you should use most of the time (which also means that you don’t have to completely rewrite your configs).
+
 ### List Connector Instances
 
 Use the following command to list of all extant connectors:
@@ -131,10 +135,6 @@ kc delete --all --pattern sink-.* -s paused
 ```
 
 The --all option is supported by several sub-commands, including `delete`, `restart`, `resume`, and `pause`. However, for better testing and control over the outcome of your actions, we recommend using the list filtering option before executing any of these sub-commands. This way, you can ensure that your filters are working as intended and avoid unintended consequences. To use list filtering, simply run the `list` sub-command and apply your filters.
-
-### Update a Connector
-
-As mentioned above, if there’s a connector to update, you can use the `update` sub-command to amend the configuration (see [Create a Connector Instance](https://github.com/aidanmelen/kafka-connect-py/blob/main/README.md#create-a-connector-instance) above). Because update is used to both create and update connectors, it’s the standard command that you should use most of the time (which also means that you don’t have to completely rewrite your configs).
 
 ### Inspect Task Details
 
