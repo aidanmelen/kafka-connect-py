@@ -141,13 +141,13 @@ As mentioned above, if there’s a connector to update, you can use the `update`
 The following command returns the connector status:
 
 ```bash
-kc status source-debezium-orders-00 | jq '.'
+kc status source-debezium-orders-00 | jq
 ```
 
 If your connector fails, the details of the failure belong to the task. So to inspect the problem, you’ll need to find the stack trace for the task. The task is the entity that is actually running the connector and converter code, so the state for the stack trace lives in it.
 
 ```bash
-kc task-status source-debezium-orders-00 <task-id> | jq '.'
+kc task-status source-debezium-orders-00 <task-id> | jq
 ```
 
 ### Restart the Connector and Tasks
@@ -173,7 +173,7 @@ kc restart source-debezium-orders-00 --include-tasks --failed-only
 and check the status again:
 
 ```bash
-kc status source-debezium-orders-00 | jq '.'
+kc status source-debezium-orders-00 | jq
 ```
 
 ### Pause and Resume a Connector
@@ -197,7 +197,7 @@ kc resume source-debezium-orders-00
 A convenient way to display all of a connector’s tasks at once is as follows:
 
 ```bash
-kc list-tasks source-debezium-orders-00 | jq '.'
+kc list-tasks source-debezium-orders-00 | jq
 ```
 
 This information is similar to what you can get from other APIs, but it is broken down by task, and configs for each are shown.
@@ -206,7 +206,7 @@ Get a List of Topics Used by a Connector
 As of Apache Kafka 2.5, it is possible to get a list of topics used by a connector:
 
 ```bash
-kc list-topics | jq '.'
+kc list-topics | jq
 ```
 
 This shows the topics that a connector is consuming from or producing to. This may not be particularly useful for connectors that are consuming from or producing to a single topic. However, some developers, for example, use regular expressions for topic names in Connect, so this is a major benefit in situations where topic names are derived computationally.
