@@ -22,8 +22,17 @@ class CatchAllExceptions(click.Group):
         except requests.exceptions.HTTPError as re:
             click.echo(re)
         except Exception as e:
-            # click.echo("Oops, you found a bug! Please see consider opening an issue: https://github.com/aidanmelen/kafka-connect-py/issues")
-            click.echo(traceback.print_exc())
+            if os.environ.get("KAFKA_CONNECT_ENABLE_TRACEBACK", "false").lower() == "true":
+                click.echo(traceback.print_exc())
+            else:
+                click.echo(
+                    "\n".join([
+                        f"Oops! An unknown error has occurred: {e}",
+                        "",
+                        "Setting KAFKA_CONNECT_ENABLE_TRACEBACK=true will provide more information in the event of a python error.",
+                        "Please see consider opening an issue: https://github.com/aidanmelen/kafka-connect-py/issues"
+                    ])
+                )
 
 
 def get_logger(log_level="NOTSET"):
