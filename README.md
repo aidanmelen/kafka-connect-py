@@ -98,8 +98,9 @@ kc restart <connector> [--include-tasks] [--only-failed]
 ###### Restart all connectors
 
 ```bash
-kc restart --all [--pattern=regex] [--include-tasks] [--only-failed] [--pattern=regex] [--state=running|paused|unassigned|failed]
+kc restart --all [--pattern=regex] [--state=running|paused|unassigned|failed] [--include-tasks] [--only-failed]
 ```
+Please note that `state` targets the connector status whereas `--include-tasks` and `--only-failed` target connector tasks.
 
 ###### Pause a connector
 
