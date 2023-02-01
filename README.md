@@ -35,7 +35,7 @@ kc plugins
 To format the result of the installed plugin list for easier readability, pipe the output to the `jq` command:
 
 ```bash
-kc plugins | jq '.'
+kc plugins | jq
 ```
 
 ### Create a Connector Instance
