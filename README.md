@@ -12,9 +12,36 @@ This project aims to supported all features of the [Kafka Connect REST API](http
 pip install kafka-connect-py
 ```
 
+
 ## Command Line Usage
 
-Get the version and other details of the Kafka Connect cluster.
+###### Kafka Connect options
+
+Connect to a custom endpoint.
+
+```bash
+kc --url https://connect.example.com <sub-command>
+```
+
+Connect with basic auth.
+
+```bash
+kc --auth="thisismyusername:thisismypass" <sub-command>
+```
+
+Connect with insecure SSL certificate.
+
+```bash
+kc --no-ssl-verify <sub-command>
+```
+
+Change log level.
+
+```bash
+kc --log-level=[critical|error|warning|info|debug|notset] <sub-command>
+```
+
+###### Get Kafka Connect cluster info
 
 ```bash
 kc info
