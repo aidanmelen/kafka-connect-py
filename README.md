@@ -23,7 +23,7 @@ kc info
 ###### Get a list of all connectors
 
 ```bash
-kc list [--expand=status|info] [--pattern=regex]
+kc list [--expand=status|info] [--pattern=regex] [--state=running|paused|unassigned|failed]
 ```
 
 ###### Get the details of a single connector
@@ -71,7 +71,7 @@ kc restart <connector> [--include-tasks] [--only-failed]
 ###### Restart all connectors
 
 ```bash
-kc restart --all [--pattern=regex] [--include-tasks] [--only-failed]
+kc restart --all [--pattern=regex] [--include-tasks] [--only-failed] [--pattern=regex] [--state=running|paused|unassigned|failed]
 ```
 
 ###### Pause a connector
@@ -83,7 +83,7 @@ kc pause <connector>
 ###### Pause all connectors
 
 ```bash
-kc pause --all [--pattern=regex]
+kc pause --all [--pattern=regex] [--state=running|paused|unassigned|failed]
 ```
 
 ###### Resume a connector
@@ -95,7 +95,7 @@ kc resume <connector>
 ###### Resume all connectors
 
 ```bash
-kc resume --all [--pattern=regex]
+kc resume --all [--pattern=regex] [--state=running|paused|unassigned|failed]
 ```
 
 ###### Delete a connector
@@ -107,7 +107,7 @@ kc delete <connector>
 ###### Delete all connectors
 
 ```bash
-kc delete --all [--pattern=regex]
+kc delete --all [--pattern=regex] [--state=running|paused|unassigned|failed]
 ```
 
 ### Python

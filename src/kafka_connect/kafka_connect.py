@@ -52,20 +52,22 @@ class KafkaConnect:
         response.raise_for_status()
         return response.json()
 
-    def __filter(self, connectors, pattern):
+    def __filter_by_name(self, connectors, pattern):
         """Filter connectors based on a regex pattern.
         Args:
             connectors (List[str] or Dict[str, Any]): The list or dictionary of connectors to filter.
-            pattern (str): The regex pattern to match the connector name.
+            pattern (str): The regex pattern to match the connector name. Defaults to `None`.
         Returns:
             List[str] or Dict[str, Any]: The filtered connectors.
         """
         if not pattern:
             filtered_connectors = connectors
+
         elif isinstance(connectors, list):
             filtered_connectors = [
                 conn for conn in connectors if re.match(pattern, conn)
             ]
+
         elif isinstance(connectors, dict):
             filtered_connectors = {
                 conn: data
@@ -73,25 +75,63 @@ class KafkaConnect:
                 if re.match(pattern, conn)
             }
         return filtered_connectors
+    
+    def __filter_by_state(self, connectors, state):
+        """Filter connectors based on state.
 
-    def list_connectors(self, expand=None, pattern=None):
+        Args:
+            connectors (List[str] or Dict[str, Any]): The list or dictionary of connectors to filter.
+            state (str): The state of a connector to filter.
+
+        Returns:
+            List[str] or Dict[str, Any]: The filtered connectors.
+        """
+        if not state:
+            return connectors
+    
+        if isinstance(connectors, list):
+            connectors_status = self.list_connectors(expand="status")
+            filtered_connectors = [
+                conn
+                for conn in connectors
+                if connectors_status.get(conn, {}).get("status", {}).get("connector", {}).get("state", "").lower() == state.lower()
+            ]
+        
+        if isinstance(connectors, dict):
+            try:
+                filtered_connectors = {
+                    conn: data
+                    for conn, data in connectors.items()
+                    if data["status"]["connector"]["state"].lower() == state.lower()
+                }
+            except Exception as e:
+                connectors_status = self.list_connectors(expand="status")
+                filtered_connectors = {
+                    conn: data
+                    for conn, data in connectors.items()
+                    if connectors_status.get(conn, {}).get("status", {}).get("connector", {}).get("state", "").lower() == state.lower()
+                }
+        
+        return filtered_connectors
+
+    def list_connectors(self, expand=None, pattern=None, state=None):
         """Get the list of connectors.
         Args:
             expand (str): Optional parameter that retrieves additional information about the connectors.
                 Valid values are "status" and "info".
-            pattern (str): The regex pattern to match the connector name. If not provided, all connectors will be listed.
+            pattern (str): Only list connectors that match the regex pattern.
+            state (str): Only list connectors that match the state.
         Returns:
             list or dict: The list of connector names or dictionary of connector names and its details.
         """
-        self.logger.info("Listing connectors")
+        self.logger.info(f"Listing connectors{' with expand=' + expand if expand else ''}")
         url = f"{self.url}/connectors"
         params = {"expand": expand}
         response = requests.get(url, auth=self.auth, verify=self.verify, params=params)
         response.raise_for_status()
         connectors = response.json()
+        return self.__filter_by_state(self.__filter_by_name(connectors, pattern=pattern), state=state)
 
-        return self.__filter(connectors, pattern)
-    
     def create_connector(self, config):
         """Create a new connector.
         Args:
@@ -191,8 +231,8 @@ class KafkaConnect:
         Args:
             connector (str): The name of the connector.
             include_tasks (bool): If `True`, the tasks of the connector will also be restarted.
-                Defaults to `False`.
-            only_failed (bool): Whether to restart only failed Task objects. Defaults to `False`.
+                Defaults to `None`.
+            only_failed (bool): Whether to restart only failed Task objects. Defaults to `None`.
         Returns:
             Dict[str, Any]: The response from the REST API, or an empty dictionary if the response is null or if there is a JSONDecodeError.
         """
@@ -225,22 +265,22 @@ class KafkaConnect:
         return None
 
     def restart_all_connectors(
-        self, include_tasks=False, only_failed=False, pattern=None
+        self, include_tasks=False, only_failed=False, pattern=None, state=None
     ):
         """Restart all connectors.
         Args:
             include_tasks (bool): Whether to include tasks when restarting the connector. Default is False.
             only_failed (bool): Whether to only restart failed tasks. Default is False.
-            pattern (str): The regex pattern to match the connector name. If not provided, all connectors will be restarted.
+            pattern (str): The regex pattern to match the connector name. Defaults to `None`.
+            state (str): The connector state to match the connectors status. Defaults to `None`.
         Returns:
             Dict[str, Dict[str, Any]]: A dictionary of responses, where the keys are the connector names and the values are the responses.
         """
         self.logger.info(
-            f"Restarting all connectors{' matching the pattern: ' + pattern if pattern else ''}"
+            f"Restarting all{' ' + state if state else ''} connectors{' matching the pattern: ' + pattern if pattern else ''}"
         )
         responses = {}
-        connectors = self.__filter(self.list_connectors(expand="status"), pattern)
-        for connector, status in connectors.items():
+        for connector, status in self.list_connectors(expand="status", pattern=pattern, state=state).items():
             self.restart_connector(connector, include_tasks, only_failed)
         return None
 
@@ -259,18 +299,18 @@ class KafkaConnect:
         response.raise_for_status()
         return None
 
-    def pause_all_connectors(self, pattern=None):
+    def pause_all_connectors(self, pattern=None, state=None):
         """Pause all connectors.
         Args:
-            pattern (str): The regex pattern to match the connector name. If not provided, all running connectors will be paused.
+            pattern (str): The regex pattern to match the connector name. Defaults to `None`.
+            state (str): The connector state to match the connectors status. Defaults to `None`.
         Returns:
             Dict[str, Dict[str, Any]]: A dictionary of responses, where the keys are the connector names and the values are the responses.
         """
         self.logger.info(
-            f"Pausing all running connectors{' matching the pattern: ' + pattern if pattern else ''}"
+            f"Pausing all{' ' + state if state else ''} connectors{' matching the pattern: ' + pattern if pattern else ''}"
         )
-        connectors = self.__filter(self.list_connectors(expand="status"), pattern)
-        for connector, status in connectors.items():
+        for connector, status in self.list_connectors(expand="status", pattern=pattern, state=state).items():
             self.pause_connector(connector)
         return None
 
@@ -289,18 +329,18 @@ class KafkaConnect:
         response.raise_for_status()
         return None
 
-    def resume_all_connectors(self, pattern=None):
+    def resume_all_connectors(self, pattern=None, state=None):
         """Resume all connectors.
         Args:
-            pattern (str): The regex pattern to match the connector name. If not provided, all paused connectors will be resumed.
+            pattern (str): The regex pattern to match the connector name. Defaults to `None`.
+            state (str): The connector state to match the connectors status. Defaults to `None`.
         Returns:
             Dict[str, Dict[str, Any]]: A dictionary of responses, where the keys are the connector names and the values are the responses.
         """
         self.logger.info(
-            f"Resuming all paused connectors{' matching the pattern: ' + pattern if pattern else ''}"
+            f"Resuming all{' ' + state if state else ''} connectors{' matching the pattern: ' + pattern if pattern else ''}"
         )
-        connectors = self.__filter(self.list_connectors(expand="status"), pattern)
-        for connector, status in connectors.items():
+        for connector, status in self.list_connectors(expand="status", pattern=pattern, state=state).items():
             self.resume_connector(connector)
         return None
 
@@ -319,18 +359,18 @@ class KafkaConnect:
         response.raise_for_status()
         return None
 
-    def delete_all_connectors(self, pattern=None):
+    def delete_all_connectors(self, pattern=None, state=None):
         """Delete all connectors.
         Args:
-            pattern (str): The regex pattern to match the connector name. If not provided, all connectors will be deleted.
+            pattern (str): The regex pattern to match the connector name. Defaults to `None`.
+            state (str): The connector state to match the connectors status. Defaults to `None`.
         Returns:
             Dict[str, Dict[str, Any]]: A dictionary of responses, where the keys are the connector names and the values are the responses.
         """
         self.logger.info(
-            f"Deleting all connectors{' matching the pattern: ' + pattern if pattern else ''}"
+            f"Deleting all{' ' + state if state else ''} connectors{' matching the pattern: ' + pattern if pattern else ''}"
         )
-        connectors = self.__filter(self.list_connectors(expand="status"), pattern)
-        for connector, status in connectors.items():
+        for connector, status in self.list_connectors(expand="status", pattern=pattern, state=state).items():
             self.delete_connector(connector)
         return None
 

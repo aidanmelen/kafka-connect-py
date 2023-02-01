@@ -2,6 +2,7 @@ from unittest.mock import patch
 from kafka_connect import KafkaConnect
 
 import mock
+import logging
 import unittest
 import json
 
@@ -9,6 +10,31 @@ import json
 class TestKafkaConnect(unittest.TestCase):
     def setUp(self):
         self.kafka_connect = KafkaConnect()
+    
+    def test_init(self):
+        # Test default initialization
+        kc = KafkaConnect()
+        self.assertEqual(kc.url, "http://localhost:8083")
+        self.assertEqual(kc.headers, {"Content-Type": "application/json"})
+        self.assertIsNone(kc.auth)
+        self.assertTrue(kc.verify)
+        self.assertIsNotNone(kc.logger)
+        
+        # Test custom initialization
+        custom_logger = logging.getLogger("custom_logger")
+        kc = KafkaConnect(auth="user:pass", ssl_verify=False, logger=custom_logger)
+        self.assertEqual(kc.auth, ("user", "pass"))
+        self.assertFalse(kc.verify)
+        self.assertEqual(kc.logger, custom_logger)
+        
+    def test_init_auth_value_error(self):
+        # Test initialization with an invalid auth string
+        with self.assertRaises(ValueError) as cm:
+            kc = KafkaConnect(auth="invalid_auth")
+        self.assertEqual(
+            str(cm.exception),
+            "Invalid auth string. Expected a colon-delimited string of `username` and `password`."
+        )
 
     @patch('kafka_connect.kafka_connect.requests')
     def test_get_cluster_info(self, mock_requests):
@@ -23,26 +49,181 @@ class TestKafkaConnect(unittest.TestCase):
         mock_response.raise_for_status.assert_called_once()
         self.assertEqual(result, mock_response.json())
     
-    def test_filter_list(self):
+    def test_filter_by_pattern_without_expand(self):
         connectors = ["my-jdbc-source", "my-hdfs-sink"]
         pattern = ".*-source$"
-        filtered_connectors = self.kafka_connect._KafkaConnect__filter(connectors, pattern)
+        filtered_connectors = self.kafka_connect._KafkaConnect__filter_by_name(connectors, pattern)
         self.assertEqual(filtered_connectors, ["my-jdbc-source"])
     
-    def test_filter_dict(self):
+    def test_filter_by_pattern_with_expand(self):
         connectors = {"my-jdbc-source": {"type": "source"}, "my-hdfs-sink": {"type": "sink"}}
         pattern = ".*-sink$"
-        filtered_connectors = self.kafka_connect._KafkaConnect__filter(connectors, pattern)
+        filtered_connectors = self.kafka_connect._KafkaConnect__filter_by_name(connectors, pattern)
         self.assertEqual(filtered_connectors, {"my-hdfs-sink": {"type": "sink"}})
 
-    def test_filter_no_pattern(self):
+    def test_filter_by_pattern_without_pattern(self):
         connectors = ["my-jdbc-source", "my-hdfs-sink"]
         pattern = ""
-        filtered_connectors = self.kafka_connect._KafkaConnect__filter(connectors, pattern)
+        filtered_connectors = self.kafka_connect._KafkaConnect__filter_by_name(connectors, pattern)
         self.assertEqual(filtered_connectors, ["my-jdbc-source", "my-hdfs-sink"])
 
     @patch('kafka_connect.kafka_connect.requests')
-    def test_list_connectors_with_no_expand(self, mock_requests):
+    def test_filter_by_state_no_state(self, mock_requests):
+        connectors = ["my-jdbc-source", "my-hdfs-sink"]
+        filtered_connectors = self.kafka_connect._KafkaConnect__filter_by_state(connectors, state=None)
+        self.assertEqual(filtered_connectors, ["my-jdbc-source", "my-hdfs-sink"])
+    
+    @patch('kafka_connect.kafka_connect.requests')
+    def test_filter_by_state_without_expand(self, mock_requests):
+        connectors = ["my-jdbc-source", "my-hdfs-sink"]
+        mock_response = mock_requests.get.return_value
+        mock_response.json.return_value = {
+            "my-jdbc-source": {
+                "status": {
+                "name": "my-jdbc-source",
+                "connector": {
+                    "state": "RUNNING",
+                    "worker_id": "10.0.0.162:8083"
+                },
+                "tasks": [],
+                "type": "sink"
+                }
+            },
+            "my-hdfs-sink": {
+                "status": {
+                "name": "my-hdfs-sink",
+                "connector": {
+                    "state": "PAUSED",
+                    "worker_id": "10.0.0.162:8083"
+                },
+                "tasks": [],
+                "type": "source"
+                }
+            }
+        }
+
+        filtered_connectors = self.kafka_connect._KafkaConnect__filter_by_state(connectors, state="RUNNING")
+
+        # ensure the filter function calls list expand=status to get the connector status when not provided.
+        mock_requests.get.assert_called_once_with("http://localhost:8083/connectors", auth=None, verify=True, params={'expand': 'status'})
+        mock_response.raise_for_status.assert_called_once()
+        self.assertEqual(filtered_connectors, ["my-jdbc-source"])
+    
+    @patch('kafka_connect.kafka_connect.requests')
+    def test_filter_by_state_with_expand_status(self, mock_requests):
+        connectors = {
+            "my-jdbc-source": {
+                "status": {
+                    "name": "my-jdbc-source",
+                    "connector": {
+                        "state": "RUNNING",
+                        "worker_id": "10.0.0.162:8083"
+                    },
+                    "tasks": [],
+                    "type": "sink"
+                }
+            },
+            "my-hdfs-sink": {
+                "status": {
+                    "name": "my-hdfs-sink",
+                    "connector": {
+                        "state": "FAILED",
+                        "worker_id": "10.0.0.162:8083"
+                    },
+                    "tasks": [],
+                    "type": "source"
+                }
+            }
+        }
+
+        mock_response = mock_requests.get.return_value
+        mock_response.get.return_value.json.return_value = {
+            "my-jdbc-source": {
+                "status": {
+                    "name": "my-jdbc-source",
+                    "connector": {
+                        "state": "RUNNING",
+                        "worker_id": "10.0.0.162:8083"
+                    },
+                    "tasks": [],
+                    "type": "sink"
+                }
+            }
+        }
+
+        filtered_connectors = self.kafka_connect._KafkaConnect__filter_by_state(connectors, state="RUNNING")
+
+        # ensure the filter function does not make redundant calls to expand=status when already provided
+        mock_requests.get.assert_not_called()
+        self.assertEqual(filtered_connectors, {"my-jdbc-source": connectors["my-jdbc-source"]})
+
+    @patch('kafka_connect.kafka_connect.requests')
+    def test_filter_by_state_with_expand_info(self, mock_requests):
+        connectors = {
+            "FileStreamSinkConnectorConnector_0": {
+                "info": {
+                "name": "FileStreamSinkConnectorConnector_0",
+                "config": {
+                    "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
+                    "file": "/Users/smogili/file.txt",
+                    "tasks.max": "1",
+                    "topics": "datagen",
+                    "name": "FileStreamSinkConnectorConnector_0"
+                },
+                "tasks": [],
+                "type": "sink"
+                }
+            },
+            "DatagenConnectorConnector_0": {
+                "info": {
+                "name": "DatagenConnectorConnector_0",
+                "config": {
+                    "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
+                    "quickstart": "clickstream",
+                    "tasks.max": "1",
+                    "name": "DatagenConnectorConnector_0",
+                    "kafka.topic": "datagen"
+                },
+                "tasks": [],
+                "type": "source"
+                }
+            }
+        }
+        mock_response = mock_requests.get.return_value
+        mock_response.json.return_value = {
+            "FileStreamSinkConnectorConnector_0": {
+                "status": {
+                    "name": "FileStreamSinkConnectorConnector_0",
+                    "connector": {
+                        "state": "RUNNING",
+                        "worker_id": "10.0.0.162:8083"
+                    },
+                    "tasks": [],
+                    "type": "sink"
+                }
+            },
+            "DatagenConnectorConnector_0": {
+                "status": {
+                    "name": "DatagenConnectorConnector_0",
+                    "connector": {
+                        "state": "FAILED",
+                        "worker_id": "10.0.0.162:8083"
+                    },
+                    "tasks": [],
+                    "type": "source"
+                }
+            }
+        }
+
+        filtered_connectors = self.kafka_connect._KafkaConnect__filter_by_state(connectors, state="FAILED")
+
+        # ensure the filter function calls expand=status when expand=info is provided
+        mock_requests.get.assert_called_once_with("http://localhost:8083/connectors", auth=None, verify=True, params={'expand': 'status'})
+        mock_response.raise_for_status.assert_called_once()
+        self.assertEqual(filtered_connectors, {"DatagenConnectorConnector_0": connectors["DatagenConnectorConnector_0"]})
+
+    @patch('kafka_connect.kafka_connect.requests')
+    def test_list_connectors_without_expand(self, mock_requests):
         mock_response = mock_requests.get.return_value
         mock_response.json.return_value = json.dumps(["my-jdbc-source", "my-hdfs-sink"])
 
@@ -75,9 +256,9 @@ class TestKafkaConnect(unittest.TestCase):
                     ],
                     "type": "sink"
                 }
-                },
-                "DatagenConnectorConnector_0": {
-                    "status": {
+            },
+            "DatagenConnectorConnector_0": {
+                "status": {
                     "name": "DatagenConnectorConnector_0",
                     "connector": {
                         "state": "RUNNING",
