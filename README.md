@@ -15,7 +15,9 @@ pip install kafka-connect-py
 
 ## Command Line Usage
 
-###### Kafka Connect options
+This CLI tool is writen with [Python Click](https://click.palletsprojects.com/en/latest/). 
+
+###### main group options
 
 Connect to a custom endpoint.
 
@@ -40,6 +42,8 @@ Change log level.
 ```bash
 kc --log-level=[critical|error|warning|info|debug|notset] <sub-command>
 ```
+
+Please see [Click: Commands and Groups](https://click.palletsprojects.com/en/8.1.x/commands/#commands-and-groups) for more information.
 
 ###### Get Kafka Connect cluster info
 
@@ -92,7 +96,7 @@ kc create <connector> --config-data <config-data>
 ###### Restart a connector
 
 ```bash
-kc restart <connector> [--include-tasks] [--only-failed]
+kc restart <connector> [--include-tasks] [--only-failed] | jq
 ```
 
 ###### Restart all connectors
@@ -100,7 +104,7 @@ kc restart <connector> [--include-tasks] [--only-failed]
 ```bash
 kc restart --all [--pattern=regex] [--state=running|paused|unassigned|failed] [--include-tasks] [--only-failed]
 ```
-Please note that `state` targets the connector status whereas `--include-tasks` and `--only-failed` target connector tasks.
+The `state` targets the connector status whereas `--include-tasks` and `--only-failed` target connector tasks.
 
 ###### Pause a connector
 
