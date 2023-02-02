@@ -1,15 +1,32 @@
-name: CodeCov
-on: [push, pull_request]
+name: Tests
+on:
+  - push
+  - pull_request
 jobs:
-  run:
-    runs-on: ubuntu-latest
-    env:
-      OS: ubuntu-latest
-      PYTHON: '3.9'
+  ci:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.9", "3.10"]
+        poetry-version: ["1.0", "1.1.15"]
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@master
-      - uses: codecov/codecov-action@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
-          files: ./tests
-          flags: unittests
-          verbose: true
+          python-version: ${{ matrix.python-version }}
+      
+      - name: Run image
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: ${{ matrix.poetry-version }}
+     
+      - name: Install
+        run: poetry install --with test,dev
+      
+      - name: Tests
+        run: poetry run coverage run -m unittest discover tests
+      
+      - name: CodeCov
+        uses: codecov/codecov-action@v3
