@@ -15,9 +15,7 @@ class KafkaConnect:
         logger (logging.Logger): The logger to be used. If not specified, a new logger will be created.
     """
 
-    def __init__(
-        self, url="http://localhost:8083", auth=None, ssl_verify=True, logger=None
-    ):
+    def __init__(self, url="http://localhost:8083", auth=None, ssl_verify=True, logger=None):
         self.url = url
         self.headers = {"Content-Type": "application/json"}
 
@@ -64,15 +62,11 @@ class KafkaConnect:
             filtered_connectors = connectors
 
         elif isinstance(connectors, list):
-            filtered_connectors = [
-                conn for conn in connectors if re.match(pattern, conn)
-            ]
+            filtered_connectors = [conn for conn in connectors if re.match(pattern, conn)]
 
         elif isinstance(connectors, dict):
             filtered_connectors = {
-                conn: data
-                for conn, data in connectors.items()
-                if re.match(pattern, conn)
+                conn: data for conn, data in connectors.items() if re.match(pattern, conn)
             }
         return filtered_connectors
 
@@ -134,9 +128,7 @@ class KafkaConnect:
         Returns:
             list or dict: The list of connector names or dictionary of connector names and its details.
         """
-        self.logger.info(
-            f"Listing connectors{' with expand=' + expand if expand else ''}"
-        )
+        self.logger.info(f"Listing connectors{' with expand=' + expand if expand else ''}")
         url = f"{self.url}/connectors"
         params = {"expand": expand}
         response = requests.get(url, auth=self.auth, verify=self.verify, params=params)
@@ -262,9 +254,7 @@ class KafkaConnect:
             self.logger.info("Connector restart request accepted.")
             return response.json()
         elif response.status_code == 204:
-            self.logger.info(
-                "Connector restart request successful, but no response body returned."
-            )
+            self.logger.info("Connector restart request successful, but no response body returned.")
         elif response.status_code == 404:
             self.logger.error("Connector not found.")
             raise HTTPError(response.text)
@@ -311,9 +301,7 @@ class KafkaConnect:
         url = f"{self.url}/connectors/{connector}/pause"
         response = requests.put(url, auth=self.auth, verify=self.verify)
         if response.status_code == 202:
-            self.logger.info(
-                "Connector pause successful, but no response body returned."
-            )
+            self.logger.info("Connector pause successful, but no response body returned.")
         response.raise_for_status()
         return None
 
@@ -345,9 +333,7 @@ class KafkaConnect:
         url = f"{self.url}/connectors/{connector}/resume"
         response = requests.put(url, auth=self.auth, verify=self.verify)
         if response.status_code == 202:
-            self.logger.debug(
-                "Connector resumed successful, but no response body returned."
-            )
+            self.logger.debug("Connector resumed successful, but no response body returned.")
         response.raise_for_status()
         return None
 
@@ -421,9 +407,7 @@ class KafkaConnect:
         Returns:
             Dict[str, Any]: The response from the REST API.
         """
-        self.logger.info(
-            f"Getting task status for {task_id} task for {connector} connector"
-        )
+        self.logger.info(f"Getting task status for {task_id} task for {connector} connector")
         url = f"{self.url}/connectors/{connector}/tasks/{task_id}/status"
         response = requests.get(url, auth=self.auth, verify=self.verify)
         response.raise_for_status()

@@ -26,10 +26,7 @@ class CatchAllExceptions(click.Group):
         ) as e:
             click.echo(e)
         except Exception as e:
-            if (
-                os.environ.get("KAFKA_CONNECT_ENABLE_TRACEBACK", "false").lower()
-                == "true"
-            ):
+            if os.environ.get("KAFKA_CONNECT_ENABLE_TRACEBACK", "false").lower() == "true":
                 click.echo(traceback.print_exc())
             else:
                 click.echo(
@@ -65,9 +62,7 @@ def get_logger(log_level="NOTSET"):
     ch.setLevel(log_level.upper())
 
     # create formatter
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
     # add formatter to ch
     ch.setFormatter(formatter)
@@ -80,45 +75,10 @@ def get_logger(log_level="NOTSET"):
 
 @click.group(cls=CatchAllExceptions)
 @click.version_option(package_name="kafka-connect-py", prog_name="kc|kafka-connect")
-@click.option(
-    "--url",
-    "-u",
-    default="http://localhost:8083",
-    metavar="URL",
-    envvar="KAFKA_CONNECT_URL",
-    show_envvar=True,
-    help="The base URL for the Kafka Connect REST API.",
-)
-@click.option(
-    "--auth",
-    "-a",
-    metavar="USERNAME:PASSWORD",
-    envvar="KAFKA_CONNECT_BASIC_AUTH",
-    show_envvar=True,
-    help="A colon-delimited string of `username` and `password` to use for authenticating with the Kafka Connect REST API.",
-)
-@click.option(
-    "--ssl-verify/--no-ssl-verify",
-    "-s",
-    default=True,
-    is_flag=True,
-    envvar="KAFKA_CONNECT_SSL_VERIFY",
-    show_envvar=True,
-    help="Whether to verify the SSL certificate when making requests to the Kafka Connect REST API.",
-)
-@click.option(
-    "--log-level",
-    "-l",
-    type=click.Choice(
-        ["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG", "NOTSET"],
-        case_sensitive=False,
-    ),
-    default="NOTSET",
-    metavar="LEVEL",
-    envvar="KAFKA_CONNECT_LOG_LEVEL",
-    show_envvar=True,
-    help="The logging level to use for the logger and console handler.",
-)
+@click.option("--url", "-u", default="http://localhost:8083", metavar="URL", envvar="KAFKA_CONNECT_URL", show_envvar=True, help="The base URL for the Kafka Connect REST API.")
+@click.option("--auth", "-a", metavar="USERNAME:PASSWORD", envvar="KAFKA_CONNECT_BASIC_AUTH", show_envvar=True, help="A colon-delimited string of `username` and `password` to use for authenticating with the Kafka Connect REST API.")
+@click.option("--ssl-verify/--no-ssl-verify", "-s", default=True, is_flag=True, envvar="KAFKA_CONNECT_SSL_VERIFY", show_envvar=True, help="Whether to verify the SSL certificate when making requests to the Kafka Connect REST API.")
+@click.option("--log-level", "-l", type=click.Choice( ["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG", "NOTSET"], case_sensitive=False, ), default="NOTSET", metavar="LEVEL", envvar="KAFKA_CONNECT_LOG_LEVEL", show_envvar=True, help="The logging level to use for the logger and console handler.")
 @click.pass_context
 def cli(ctx, url, auth, ssl_verify, log_level):
     """A command-line client for the Confluent Platform Kafka Connect REST API."""
@@ -136,45 +96,18 @@ def info(kafka_connect):
 
 
 @cli.command()
-@click.option(
-    "-e",
-    "--expand",
-    type=click.Choice(["status", "info"]),
-    show_envvar=True,
-    help="Whether to retrieve additional information about the connectors.",
-)
-@click.option(
-    "-p",
-    "--pattern",
-    default=None,
-    metavar="REGEX",
-    show_envvar=True,
-    help="The regex pattern that will list only the connectors that match.",
-)
-@click.option(
-    "-s",
-    "--state",
-    type=click.Choice(
-        ["RUNNING", "PAUSED", "UNASSIGNED", "FAILED"], case_sensitive=False
-    ),
-    default=None,
-    metavar="STATE",
-    show_envvar=True,
-    help="The state that will list only the connectors that match.",
-)
+@click.option("-e", "--expand", type=click.Choice(["status", "info"]), show_envvar=True, help="Whether to retrieve additional information about the connectors.")
+@click.option("-p", "--pattern", default=None, metavar="REGEX", show_envvar=True, help="The regex pattern that will list only the connectors that match.")
+@click.option("-s", "--state", type=click.Choice(["RUNNING", "PAUSED", "UNASSIGNED", "FAILED"], case_sensitive=False), default=None, metavar="STATE", show_envvar=True, help="The state that will list only the connectors that match.")
 @click.pass_obj
 def list(kafka_connect, expand, pattern, state):
     """Get a list of active connectors."""
-    response = kafka_connect.list_connectors(
-        expand=expand, pattern=pattern, state=state
-    )
+    response = kafka_connect.list_connectors(expand=expand, pattern=pattern, state=state)
     click.echo(json.dumps(response))
 
 
 @cli.command()
-@click.option(
-    "--config-file", "-f", type=click.File("r"), help="Path to the configuration file"
-)
+@click.option("--config-file", "-f", type=click.File("r"), help="Path to the configuration file")
 @click.option("--config-data", "-d", help="Inline configuration data in JSON format")
 @click.pass_obj
 def create(kafka_connect, config_file, config_data):
@@ -191,9 +124,7 @@ def create(kafka_connect, config_file, config_data):
 
 @cli.command()
 @click.argument("connector")
-@click.option(
-    "--config-file", "-f", type=click.File("r"), help="Path to the configuration file"
-)
+@click.option("--config-file", "-f", type=click.File("r"), help="Path to the configuration file")
 @click.option("--config-data", "-d", help="Inline configuration data in JSON format")
 @click.pass_obj
 def update(kafka_connect, connector, config_file, config_data):
@@ -238,49 +169,11 @@ def status(kafka_connect, connector):
 
 @cli.command()
 @click.argument("connector", required=False)
-@click.option(
-    "-i",
-    "--include-tasks",
-    is_flag=True,
-    default=False,
-    show_envvar=True,
-    help="Whether to include the Task objects in the restart operation.",
-)
-@click.option(
-    "-o",
-    "--only-failed",
-    is_flag=True,
-    default=False,
-    show_envvar=True,
-    help="Whether to restart only failed Task objects.",
-)
-@click.option(
-    "-a",
-    "--all",
-    is_flag=True,
-    default=False,
-    show_envvar=True,
-    help="Whether to restart all connectors.",
-)
-@click.option(
-    "-p",
-    "--pattern",
-    default=None,
-    metavar="REGEX",
-    show_envvar=True,
-    help="The regex pattern that will restart only the connectors that match when the --all option is set.",
-)
-@click.option(
-    "-s",
-    "--state",
-    type=click.Choice(
-        ["RUNNING", "PAUSED", "UNASSIGNED", "FAILED"], case_sensitive=False
-    ),
-    default=None,
-    metavar="STATE",
-    show_envvar=True,
-    help="The state that will list only the connectors that match.",
-)
+@click.option("-i", "--include-tasks", is_flag=True, default=False, show_envvar=True, help="Whether to include the Task objects in the restart operation.")
+@click.option("-o", "--only-failed", is_flag=True, default=False, show_envvar=True, help="Whether to restart only failed Task objects.")
+@click.option("-a", "--all", is_flag=True, default=False, show_envvar=True, help="Whether to restart all connectors.")
+@click.option("-p", "--pattern", default=None, metavar="REGEX", show_envvar=True, help="The regex pattern that will restart only the connectors that match when the --all option is set.")
+@click.option("-s", "--state", type=click.Choice(["RUNNING", "PAUSED", "UNASSIGNED", "FAILED"], case_sensitive=False), default=None, metavar="STATE", show_envvar=True, help="The state that will list only the connectors that match.")
 @click.pass_obj
 def restart(kafka_connect, connector, include_tasks, only_failed, all, pattern, state):
     """Restart a connector or all connectors matching a certain pattern."""
@@ -289,11 +182,7 @@ def restart(kafka_connect, connector, include_tasks, only_failed, all, pattern, 
             include_tasks=include_tasks, only_failed=only_failed, pattern=pattern
         )
         click.echo(
-            json.dumps(
-                kafka_connect.list_connectors(
-                    expand="status", pattern=pattern, state=state
-                )
-            )
+            json.dumps(kafka_connect.list_connectors(expand="status", pattern=pattern, state=state))
         )
     elif connector:
         response = kafka_connect.restart_connector(
@@ -306,33 +195,9 @@ def restart(kafka_connect, connector, include_tasks, only_failed, all, pattern, 
 
 @cli.command()
 @click.argument("connector", required=False)
-@click.option(
-    "-a",
-    "--all",
-    is_flag=True,
-    default=False,
-    show_envvar=True,
-    help="Whether to pause all connectors.",
-)
-@click.option(
-    "-p",
-    "--pattern",
-    default=None,
-    metavar="REGEX",
-    show_envvar=True,
-    help="The regex pattern that will pause only the connectors that match when the --all option is set.",
-)
-@click.option(
-    "-s",
-    "--state",
-    type=click.Choice(
-        ["RUNNING", "PAUSED", "UNASSIGNED", "FAILED"], case_sensitive=False
-    ),
-    default=None,
-    metavar="STATE",
-    show_envvar=True,
-    help="The state that will list only the connectors that match.",
-)
+@click.option("-a", "--all", is_flag=True, default=False, show_envvar=True, help="Whether to pause all connectors.")
+@click.option("-p", "--pattern", default=None, metavar="REGEX", show_envvar=True, help="The regex pattern that will pause only the connectors that match when the --all option is set.")
+@click.option("-s", "--state", type=click.Choice(["RUNNING", "PAUSED", "UNASSIGNED", "FAILED"], case_sensitive=False), default=None, metavar="STATE", show_envvar=True, help="The state that will list only the connectors that match.")
 @click.pass_obj
 def pause(kafka_connect, connector, all, pattern, state):
     """Pauses a connector or all connectors that match a certain pattern."""
@@ -346,33 +211,9 @@ def pause(kafka_connect, connector, all, pattern, state):
 
 @cli.command()
 @click.argument("connector", required=False)
-@click.option(
-    "-a",
-    "--all",
-    is_flag=True,
-    default=False,
-    show_envvar=True,
-    help="Whether to resume all connectors.",
-)
-@click.option(
-    "-p",
-    "--pattern",
-    default=None,
-    metavar="REGEX",
-    show_envvar=True,
-    help="The regex pattern that will resume only the connectors that match when the --all option is set.",
-)
-@click.option(
-    "-s",
-    "--state",
-    type=click.Choice(
-        ["RUNNING", "PAUSED", "UNASSIGNED", "FAILED"], case_sensitive=False
-    ),
-    default=None,
-    metavar="STATE",
-    show_envvar=True,
-    help="The state that will list only the connectors that match.",
-)
+@click.option("-a", "--all", is_flag=True, default=False, show_envvar=True, help="Whether to resume all connectors.")
+@click.option("-p", "--pattern", default=None, metavar="REGEX", show_envvar=True, help="The regex pattern that will resume only the connectors that match when the --all option is set.")
+@click.option("-s", "--state", type=click.Choice(["RUNNING", "PAUSED", "UNASSIGNED", "FAILED"], case_sensitive=False), default=None, metavar="STATE", show_envvar=True, help="The state that will list only the connectors that match.")
 @click.pass_obj
 def resume(kafka_connect, connector, all, pattern, state):
     """Resumes a connector or all connectors that match a certain pattern."""
@@ -386,33 +227,9 @@ def resume(kafka_connect, connector, all, pattern, state):
 
 @cli.command()
 @click.argument("connector", required=False)
-@click.option(
-    "-a",
-    "--all",
-    is_flag=True,
-    default=False,
-    show_envvar=True,
-    help="Whether to delete all connectors.",
-)
-@click.option(
-    "-p",
-    "--pattern",
-    default=None,
-    metavar="REGEX",
-    show_envvar=True,
-    help="The regex pattern that will delete only the connectors that match when the --all option is set.",
-)
-@click.option(
-    "-s",
-    "--state",
-    type=click.Choice(
-        ["RUNNING", "PAUSED", "UNASSIGNED", "FAILED"], case_sensitive=False
-    ),
-    default=None,
-    metavar="STATE",
-    show_envvar=True,
-    help="The state that will list only the connectors that match.",
-)
+@click.option("-a","--all",is_flag=True,default=False,show_envvar=True,help="Whether to delete all connectors.")
+@click.option("-p","--pattern",default=None,metavar="REGEX",show_envvar=True,help="The regex pattern that will delete only the connectors that match when the --all option is set.")
+@click.option("-s","--state",type=click.Choice(["RUNNING", "PAUSED", "UNASSIGNED", "FAILED"], case_sensitive=False),default=None,metavar="STATE",show_envvar=True,help="The state that will list only the connectors that match.")
 @click.pass_obj
 def delete(kafka_connect, connector, all, pattern, state):
     """Deletes a connector or all connectors that match a certain pattern."""
@@ -426,15 +243,6 @@ def delete(kafka_connect, connector, all, pattern, state):
 
 @cli.command()
 @click.argument("connector")
-@click.option(
-    "i",
-    "--include-tasks",
-    is_flag=True,
-    default=False,
-    envvar="KAFKA_CONNECT_INCLUDE_TASKS",
-    show_envvar=True,
-    help="Whether to include the Task objects in the restart operation.",
-)
 @click.pass_obj
 def list_tasks(kafka_connect, connector):
     """Gets the list of tasks associated with a connector."""
@@ -490,9 +298,7 @@ def list_plugins(kafka_connect):
 
 @cli.command()
 @click.argument("plugin")
-@click.option(
-    "--config-file", "-f", type=click.File("r"), help="Path to the configuration file"
-)
+@click.option("--config-file", "-f", type=click.File("r"), help="Path to the configuration file")
 @click.option("--config-data", "-d", help="Inline configuration data in JSON format")
 @click.pass_obj
 def validate_config(kafka_connect, plugin, config_file, config_data):

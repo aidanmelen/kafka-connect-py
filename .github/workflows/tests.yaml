@@ -1,7 +1,7 @@
 name: Tests
 on: 
-  - push
-  - pull_request
+  push:
+    paths: ['src/**', 'tests/**']
 jobs:
   ci:
     strategy:
@@ -24,6 +24,9 @@ jobs:
      
       - name: Install
         run: poetry install --with test,dev
+
+      - name: Lint
+        run: black --line-length 100 src tests --exclude src/kafka_connect/cli.py
       
       - name: Tests
         run: |
