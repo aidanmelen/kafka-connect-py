@@ -75,7 +75,7 @@ class KafkaConnect:
                 if re.match(pattern, conn)
             }
         return filtered_connectors
-    
+
     def __filter_by_state(self, connectors, state):
         """Filter connectors based on state.
 
@@ -88,15 +88,20 @@ class KafkaConnect:
         """
         if not state:
             return connectors
-    
+
         if isinstance(connectors, list):
             connectors_status = self.list_connectors(expand="status")
             filtered_connectors = [
                 conn
                 for conn in connectors
-                if connectors_status.get(conn, {}).get("status", {}).get("connector", {}).get("state", "").lower() == state.lower()
+                if connectors_status.get(conn, {})
+                .get("status", {})
+                .get("connector", {})
+                .get("state", "")
+                .lower()
+                == state.lower()
             ]
-        
+
         if isinstance(connectors, dict):
             try:
                 filtered_connectors = {
@@ -109,9 +114,14 @@ class KafkaConnect:
                 filtered_connectors = {
                     conn: data
                     for conn, data in connectors.items()
-                    if connectors_status.get(conn, {}).get("status", {}).get("connector", {}).get("state", "").lower() == state.lower()
+                    if connectors_status.get(conn, {})
+                    .get("status", {})
+                    .get("connector", {})
+                    .get("state", "")
+                    .lower()
+                    == state.lower()
                 }
-        
+
         return filtered_connectors
 
     def list_connectors(self, expand=None, pattern=None, state=None):
@@ -124,13 +134,17 @@ class KafkaConnect:
         Returns:
             list or dict: The list of connector names or dictionary of connector names and its details.
         """
-        self.logger.info(f"Listing connectors{' with expand=' + expand if expand else ''}")
+        self.logger.info(
+            f"Listing connectors{' with expand=' + expand if expand else ''}"
+        )
         url = f"{self.url}/connectors"
         params = {"expand": expand}
         response = requests.get(url, auth=self.auth, verify=self.verify, params=params)
         response.raise_for_status()
         connectors = response.json()
-        return self.__filter_by_state(self.__filter_by_name(connectors, pattern=pattern), state=state)
+        return self.__filter_by_state(
+            self.__filter_by_name(connectors, pattern=pattern), state=state
+        )
 
     def create_connector(self, config):
         """Create a new connector.
@@ -280,7 +294,9 @@ class KafkaConnect:
             f"Restarting all{' ' + state if state else ''} connectors{' matching the pattern: ' + pattern if pattern else ''}"
         )
         responses = {}
-        for connector, status in self.list_connectors(expand="status", pattern=pattern, state=state).items():
+        for connector, status in self.list_connectors(
+            expand="status", pattern=pattern, state=state
+        ).items():
             self.restart_connector(connector, include_tasks, only_failed)
         return None
 
@@ -295,7 +311,9 @@ class KafkaConnect:
         url = f"{self.url}/connectors/{connector}/pause"
         response = requests.put(url, auth=self.auth, verify=self.verify)
         if response.status_code == 202:
-            self.logger.info("Connector pause successful, but no response body returned.")
+            self.logger.info(
+                "Connector pause successful, but no response body returned."
+            )
         response.raise_for_status()
         return None
 
@@ -310,7 +328,9 @@ class KafkaConnect:
         self.logger.info(
             f"Pausing all{' ' + state if state else ''} connectors{' matching the pattern: ' + pattern if pattern else ''}"
         )
-        for connector, status in self.list_connectors(expand="status", pattern=pattern, state=state).items():
+        for connector, status in self.list_connectors(
+            expand="status", pattern=pattern, state=state
+        ).items():
             self.pause_connector(connector)
         return None
 
@@ -325,7 +345,9 @@ class KafkaConnect:
         url = f"{self.url}/connectors/{connector}/resume"
         response = requests.put(url, auth=self.auth, verify=self.verify)
         if response.status_code == 202:
-            self.logger.debug("Connector resumed successful, but no response body returned.")
+            self.logger.debug(
+                "Connector resumed successful, but no response body returned."
+            )
         response.raise_for_status()
         return None
 
@@ -340,7 +362,9 @@ class KafkaConnect:
         self.logger.info(
             f"Resuming all{' ' + state if state else ''} connectors{' matching the pattern: ' + pattern if pattern else ''}"
         )
-        for connector, status in self.list_connectors(expand="status", pattern=pattern, state=state).items():
+        for connector, status in self.list_connectors(
+            expand="status", pattern=pattern, state=state
+        ).items():
             self.resume_connector(connector)
         return None
 
@@ -370,7 +394,9 @@ class KafkaConnect:
         self.logger.info(
             f"Deleting all{' ' + state if state else ''} connectors{' matching the pattern: ' + pattern if pattern else ''}"
         )
-        for connector, status in self.list_connectors(expand="status", pattern=pattern, state=state).items():
+        for connector, status in self.list_connectors(
+            expand="status", pattern=pattern, state=state
+        ).items():
             self.delete_connector(connector)
         return None
 
@@ -415,7 +441,9 @@ class KafkaConnect:
         url = f"{self.url}/connectors/{connector}/tasks/{task_id}/restart"
         response = requests.post(url, auth=self.auth, verify=self.verify)
         if response.status_code == 200:
-            self.logger.info("Connector topic names reset successful, but no response body returned.")
+            self.logger.info(
+                "Connector topic names reset successful, but no response body returned."
+            )
         response.raise_for_status()
         return None
 
@@ -443,7 +471,9 @@ class KafkaConnect:
         url = f"{self.url}/connectors/{connector}/topics/reset"
         response = requests.put(url, auth=self.auth, verify=self.verify)
         if response.status_code == 200:
-            self.logger.info("Connector topic names reset successful, but no response body returned.")
+            self.logger.info(
+                "Connector topic names reset successful, but no response body returned."
+            )
         response.raise_for_status()
         return None
 

@@ -20,19 +20,27 @@ class CatchAllExceptions(click.Group):
     def __call__(self, *args, **kwargs):
         try:
             return self.main(*args, **kwargs)
-        except (requests.exceptions.RequestException, urllib3.exceptions.HTTPError) as e:
+        except (
+            requests.exceptions.RequestException,
+            urllib3.exceptions.HTTPError,
+        ) as e:
             click.echo(e)
         except Exception as e:
-            if os.environ.get("KAFKA_CONNECT_ENABLE_TRACEBACK", "false").lower() == "true":
+            if (
+                os.environ.get("KAFKA_CONNECT_ENABLE_TRACEBACK", "false").lower()
+                == "true"
+            ):
                 click.echo(traceback.print_exc())
             else:
                 click.echo(
-                    "\n".join([
-                        f"Oops! An unknown error has occurred: {e}",
-                        "",
-                        "Setting KAFKA_CONNECT_ENABLE_TRACEBACK=true will provide more information in the event of a python error.",
-                        "Please see consider opening an issue: https://github.com/aidanmelen/kafka-connect-py/issues"
-                    ])
+                    "\n".join(
+                        [
+                            f"Oops! An unknown error has occurred: {e}",
+                            "",
+                            "Setting KAFKA_CONNECT_ENABLE_TRACEBACK=true will provide more information in the event of a python error.",
+                            "Please see consider opening an issue: https://github.com/aidanmelen/kafka-connect-py/issues",
+                        ]
+                    )
                 )
 
 
@@ -101,7 +109,10 @@ def get_logger(log_level="NOTSET"):
 @click.option(
     "--log-level",
     "-l",
-    type=click.Choice(["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG", "NOTSET"], case_sensitive=False),
+    type=click.Choice(
+        ["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG", "NOTSET"],
+        case_sensitive=False,
+    ),
     default="NOTSET",
     metavar="LEVEL",
     envvar="KAFKA_CONNECT_LOG_LEVEL",
@@ -143,7 +154,9 @@ def info(kafka_connect):
 @click.option(
     "-s",
     "--state",
-    type=click.Choice(["RUNNING", "PAUSED", "UNASSIGNED", "FAILED"], case_sensitive=False),
+    type=click.Choice(
+        ["RUNNING", "PAUSED", "UNASSIGNED", "FAILED"], case_sensitive=False
+    ),
     default=None,
     metavar="STATE",
     show_envvar=True,
@@ -152,7 +165,9 @@ def info(kafka_connect):
 @click.pass_obj
 def list(kafka_connect, expand, pattern, state):
     """Get a list of active connectors."""
-    response = kafka_connect.list_connectors(expand=expand, pattern=pattern, state=state)
+    response = kafka_connect.list_connectors(
+        expand=expand, pattern=pattern, state=state
+    )
     click.echo(json.dumps(response))
 
 
@@ -258,7 +273,9 @@ def status(kafka_connect, connector):
 @click.option(
     "-s",
     "--state",
-    type=click.Choice(["RUNNING", "PAUSED", "UNASSIGNED", "FAILED"], case_sensitive=False),
+    type=click.Choice(
+        ["RUNNING", "PAUSED", "UNASSIGNED", "FAILED"], case_sensitive=False
+    ),
     default=None,
     metavar="STATE",
     show_envvar=True,
@@ -272,7 +289,11 @@ def restart(kafka_connect, connector, include_tasks, only_failed, all, pattern, 
             include_tasks=include_tasks, only_failed=only_failed, pattern=pattern
         )
         click.echo(
-            json.dumps(kafka_connect.list_connectors(expand="status", pattern=pattern, state=state))
+            json.dumps(
+                kafka_connect.list_connectors(
+                    expand="status", pattern=pattern, state=state
+                )
+            )
         )
     elif connector:
         response = kafka_connect.restart_connector(
@@ -304,7 +325,9 @@ def restart(kafka_connect, connector, include_tasks, only_failed, all, pattern, 
 @click.option(
     "-s",
     "--state",
-    type=click.Choice(["RUNNING", "PAUSED", "UNASSIGNED", "FAILED"], case_sensitive=False),
+    type=click.Choice(
+        ["RUNNING", "PAUSED", "UNASSIGNED", "FAILED"], case_sensitive=False
+    ),
     default=None,
     metavar="STATE",
     show_envvar=True,
@@ -342,7 +365,9 @@ def pause(kafka_connect, connector, all, pattern, state):
 @click.option(
     "-s",
     "--state",
-    type=click.Choice(["RUNNING", "PAUSED", "UNASSIGNED", "FAILED"], case_sensitive=False),
+    type=click.Choice(
+        ["RUNNING", "PAUSED", "UNASSIGNED", "FAILED"], case_sensitive=False
+    ),
     default=None,
     metavar="STATE",
     show_envvar=True,
@@ -380,7 +405,9 @@ def resume(kafka_connect, connector, all, pattern, state):
 @click.option(
     "-s",
     "--state",
-    type=click.Choice(["RUNNING", "PAUSED", "UNASSIGNED", "FAILED"], case_sensitive=False),
+    type=click.Choice(
+        ["RUNNING", "PAUSED", "UNASSIGNED", "FAILED"], case_sensitive=False
+    ),
     default=None,
     metavar="STATE",
     show_envvar=True,
