@@ -1,4 +1,4 @@
-NAME = kafka-connect
+NAME = kafka-connect-py
 VERSION = $(shell poetry version -s)
 
 SHELL := /bin/bash
@@ -9,6 +9,12 @@ help: ## This help.
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 .DEFAULT_GOAL := help
+
+build:  ## Build docker image
+	docker build . --tag $(NAME)
+
+dev:  ## Build docker image
+	docker run -it --rm --entrypoint /bin/sh $(NAME)
 
 release: tests  ## Push tags and trigger Github Actions release.
 	git tag $(VERSION)

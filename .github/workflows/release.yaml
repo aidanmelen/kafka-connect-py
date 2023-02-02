@@ -41,5 +41,5 @@ jobs:
           platforms: linux/amd64,linux/arm/v7
           build-args: VERSION=${{ steps.get_tag.outputs.TAG }}
           tags: |
-            ${{ secrets.DOCKER_HUB_USERNAME }}/kafka-connect:latest
-            ${{ secrets.DOCKER_HUB_USERNAME }}/kafka-connect:${{ steps.get_tag.outputs.TAG }}
+            ${{ secrets.DOCKER_HUB_USERNAME }}/kafka-connect-py:latest
+            ${{ secrets.DOCKER_HUB_USERNAME }}/kafka-connect-py:${{ steps.get_tag.outputs.TAG }}
