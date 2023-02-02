@@ -295,6 +295,10 @@ Ran 30 tests in 0.034s
 OK
 ```
 
+## License
+
+[Apache 2.0 License - aidanmelen/kafka-connect-py](https://github.com/aidanmelen/kafka-connect-py/blob/main/README.md)
+
 ## Credits
 
 The entire [Command Line Usage](https://github.com/aidanmelen/kafka-connect-py/blob/main/README.md#command-line-usage) section was copied directly from the Confluence's [Kafka Connect’s REST API](https://developer.confluent.io/learn-kafka/kafka-connect/rest-api/) course.
