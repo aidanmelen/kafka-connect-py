@@ -1,5 +1,4 @@
 [![PyPI](https://img.shields.io/pypi/v/kafka_connect_py.svg)](https://pypi.org/project/kafka-connect-py/)
-[![codecov](https://codecov.io/gh/aidanmelen/kafka-connect-py/branch/main/graph/badge.svg)](https://codecov.io/gh/aidanmelen/kafka-connect-py)
 
 # Kafka Connect Python
 
