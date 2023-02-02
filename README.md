@@ -288,12 +288,21 @@ print(response)
 ## Tests
 
 ```bash
-python3 -m unittest tests/test_kafka_connect.py -v
+$ python3 -m unittest tests/test_kafka_connect.py -v
 ..............................
 ----------------------------------------------------------------------
 Ran 30 tests in 0.034s
 
 OK
+
+$ coverage report
+Name                                 Stmts   Miss  Cover
+--------------------------------------------------------
+src/kafka_connect/__init__.py            1      0   100%
+src/kafka_connect/kafka_connect.py     206     44    79%
+tests/test_kafka_connect.py            254      5    98%
+--------------------------------------------------------
+TOTAL                                  461     49    89%
 ```
 
 ## License
