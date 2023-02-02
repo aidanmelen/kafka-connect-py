@@ -73,41 +73,41 @@ class TestKafkaConnect(unittest.TestCase):
         filtered_connectors = self.kafka_connect._KafkaConnect__filter_by_state(connectors, state=None)
         self.assertEqual(filtered_connectors, ["my-jdbc-source", "my-hdfs-sink"])
     
-    # @patch('kafka_connect.kafka_connect.requests')
-    # def test_filter_by_state_without_expand(self, mock_requests):
-    #     connectors = ["my-jdbc-source", "my-hdfs-sink"]
-    #     mock_response = mock_requests.get.return_value
-    #     mock_response.json.return_value = {
-    #         "my-jdbc-source": {
-    #             "status": {
-    #             "name": "my-jdbc-source",
-    #             "connector": {
-    #                 "state": "RUNNING",
-    #                 "worker_id": "10.0.0.162:8083"
-    #             },
-    #             "tasks": [],
-    #             "type": "sink"
-    #             }
-    #         },
-    #         "my-hdfs-sink": {
-    #             "status": {
-    #             "name": "my-hdfs-sink",
-    #             "connector": {
-    #                 "state": "PAUSED",
-    #                 "worker_id": "10.0.0.162:8083"
-    #             },
-    #             "tasks": [],
-    #             "type": "source"
-    #             }
-    #         }
-    #     }
+    @patch('kafka_connect.kafka_connect.requests')
+    def test_filter_by_state_without_expand(self, mock_requests):
+        connectors = ["my-jdbc-source", "my-hdfs-sink"]
+        mock_response = mock_requests.get.return_value
+        mock_response.json.return_value = {
+            "my-jdbc-source": {
+                "status": {
+                "name": "my-jdbc-source",
+                "connector": {
+                    "state": "RUNNING",
+                    "worker_id": "10.0.0.162:8083"
+                },
+                "tasks": [],
+                "type": "sink"
+                }
+            },
+            "my-hdfs-sink": {
+                "status": {
+                "name": "my-hdfs-sink",
+                "connector": {
+                    "state": "PAUSED",
+                    "worker_id": "10.0.0.162:8083"
+                },
+                "tasks": [],
+                "type": "source"
+                }
+            }
+        }
 
-    #     filtered_connectors = self.kafka_connect._KafkaConnect__filter_by_state(connectors, state="RUNNING")
+        filtered_connectors = self.kafka_connect._KafkaConnect__filter_by_state(connectors, state="RUNNING")
 
-    #     # ensure the filter function calls list expand=status to get the connector status when not provided.
-    #     mock_requests.get.assert_called_once_with("http://localhost:8083/connectors", auth=None, verify=True, params={'expand': 'status'})
-    #     mock_response.raise_for_status.assert_called_once()
-    #     self.assertEqual(filtered_connectors, ["my-jdbc-source"])
+        # ensure the filter function calls list expand=status to get the connector status when not provided.
+        mock_requests.get.assert_called_once_with("http://localhost:8083/connectors", auth=None, verify=True, params={'expand': 'status'})
+        mock_response.raise_for_status.assert_called_once()
+        self.assertEqual(filtered_connectors, ["my-jdbc-source"])
     
     @patch('kafka_connect.kafka_connect.requests')
     def test_filter_by_state_with_expand_status(self, mock_requests):
