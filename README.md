@@ -1,7 +1,5 @@
 [![PyPI](https://img.shields.io/pypi/v/kafka_connect_py.svg)](https://pypi.org/project/kafka-connect-py/)
-
 [![Coverage](https://coveralls.io/repos/github/aidanmelen/kafka-connect-py/badge.svg?branch=main)](https://coveralls.io/repos/github/aidanmelen/kafka-connect-py?branch=main)
-
 
 # Kafka Connect Python
 
