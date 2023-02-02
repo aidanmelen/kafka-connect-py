@@ -30,7 +30,7 @@ kc --log-level=[critical|error|warning|info|debug|notset] <sub-command>
 
 This only impacts `kc` command line logging and has not effect on [Kafka Connect logging](https://docs.confluent.io/platform/current/connect/logging.html#kconnect-long-logging).
 
-### Sub Command
+### Sub Commands
 
 #### Get Kafka Connect cluster info
 
