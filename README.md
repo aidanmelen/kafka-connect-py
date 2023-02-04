@@ -1,5 +1,6 @@
 [![PyPI](https://img.shields.io/pypi/v/kafka_connect_py.svg)](https://pypi.org/project/kafka-connect-py/)
 [![Dockerhub](https://img.shields.io/docker/v/aidanmelen/kafka-connect-py?color=blue&label=docker%20build)](https://hub.docker.com/r/aidanmelen/kafka-connect-py)
+[![Tests](https://github.com/aidanmelen/kafka-connect-py/actions/workflows/tests.yaml/badge.svg)](https://github.com/aidanmelen/kafka-connect-py/actions/workflows/tests.yaml)
 [![Coverage Status](https://coveralls.io/repos/github/aidanmelen/kafka-connect-py/badge.svg?branch=main)](https://coveralls.io/github/aidanmelen/kafka-connect-py?branch=main)
 
 # Kafka Connect Python
