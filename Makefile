@@ -26,7 +26,7 @@ coverage: test ## Test python
 	poetry run coverage report --include "src/kafka_connect/**" -m
 	poetry run coverage lcov
 
-release: lint test  ## Push tags and trigger Github Actions release.
+release: lint test coverage ## Push tags and trigger Github Actions release.
 	git tag $(VERSION)
 	git push --tags
 
