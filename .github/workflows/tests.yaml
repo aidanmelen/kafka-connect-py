@@ -28,7 +28,7 @@ jobs:
         run: poetry install --with test,dev
 
       - name: Lint
-        run: poetry run black --line-length 100 src tests --exclude src/kafka_connect/cli.py
+        run: poetry run black --line-length 100 src tests --exclude src/kafka_connect/cli.py --check
       
       - name: Tests
         run: |

@@ -31,13 +31,13 @@ kc info
 To list the plugins installed on the worker, use the following command:
 
 ```bash
-kc plugins
+kc list-plugins
 ```
 
 To format the result of the installed plugin list for easier readability, pipe the output to the `jq` command:
 
 ```bash
-kc plugins | jq
+kc list-plugins | jq
 ```
 
 ### Create a Connector Instance

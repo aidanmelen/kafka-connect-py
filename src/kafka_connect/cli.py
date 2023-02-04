@@ -112,13 +112,18 @@ def list(kafka_connect, expand, pattern, state):
 @click.pass_obj
 def create(kafka_connect, config_file, config_data):
     """Create a new connector, returning the current connector info if successful. Return 409 (Conflict) if rebalance is in process, or if the connector already exists."""
-    if config_file:
-        config_data = config_file.read()
-    elif config_data:
-        config_data = config_data
-    else:
-        raise click.UsageError("One of --config-file or --config-data is required")
-    response = kafka_connect.create_connector(json.loads(config_data))
+    try:
+        if config_file:
+            config_data = json.loads(config_file.read())
+        elif config_data:
+            config_data = json.loads(config_data)
+        else:
+            raise click.UsageError("One of --config-file or --config-data is required")
+    except json.JSONDecodeError as e:
+        click.echo(f"Error decoding JSON: {e}")
+        return None
+    
+    response = kafka_connect.create_connector(config_data)
     click.echo(json.dumps(response))
 
 
@@ -129,14 +134,18 @@ def create(kafka_connect, config_file, config_data):
 @click.pass_obj
 def update(kafka_connect, connector, config_file, config_data):
     """Create a new connector using the given configuration, or update the configuration for an existing connector. Returns information about the connector after the change has been made. Return 409 (Conflict) if rebalance is in process."""
-    if config_file:
-        config_data = config_file.read()
-    elif config_data:
-        config_data = config_data
-    else:
-        raise click.UsageError("One of --config-file or --config-data is required")
-    config = json.loads(config_data)
-    response = kafka_connect.update_connector(connector, json.loads(config_data))
+    try:
+        if config_file:
+            config_data = json.loads(config_file.read())
+        elif config_data:
+            config_data = json.loads(config_data)
+        else:
+            raise click.UsageError("One of --config-file or --config-data is required")
+    except json.JSONDecodeError as e:
+        click.echo(f"Error decoding JSON: {e}")
+        return None
+    
+    response = kafka_connect.update_connector(connector, config_data)
     click.echo(json.dumps(response))
 
 
