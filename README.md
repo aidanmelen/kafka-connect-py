@@ -136,7 +136,7 @@ The following will delete all connector names prefixed with the word `sink-` and
 kc delete --all --pattern sink-.* -s paused
 ```
 
-The --all option is supported by several sub-commands, including `delete`, `restart`, `resume`, and `pause`. However, for better testing and control over the outcome of your actions, we recommend using the list filtering option before executing any of these sub-commands. This way, you can ensure that your filters are working as intended and avoid unintended consequences. To use list filtering, simply run the `list` sub-command and apply your filters.
+The `--all` option is supported by several sub-commands, including `delete`, `restart`, `resume`, and `pause`. However, for better testing and control over the outcome of your actions, we recommend using the list filtering option before executing any of these sub-commands. This way, you can ensure that your filters are working as intended and avoid unintended consequences. To use list filtering, simply run the `list` sub-command and apply your filters.
 
 ### Inspect Task Details
 
@@ -208,7 +208,7 @@ Get a List of Topics Used by a Connector
 As of Apache Kafka 2.5, it is possible to get a list of topics used by a connector:
 
 ```bash
-kc list-topics | jq
+kc list-topics source-debezium-orders-00 | jq
 ```
 
 This shows the topics that a connector is consuming from or producing to. This may not be particularly useful for connectors that are consuming from or producing to a single topic. However, some developers, for example, use regular expressions for topic names in Connect, so this is a major benefit in situations where topic names are derived computationally.
