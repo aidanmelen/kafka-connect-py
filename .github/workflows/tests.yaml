@@ -1,7 +1,9 @@
 name: Tests
 on: 
+  workflow_dispatch: {}
   push:
     paths: ['src/**', 'tests/**']
+
 jobs:
   ci:
     strategy:
