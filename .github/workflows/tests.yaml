@@ -32,7 +32,7 @@ jobs:
       
       - name: Tests
         run: |
-          poetry run coverage run -m unittest discover tests -v
+          poetry run coverage report --include "src/kafka_connect/**" -m
           poetry run coverage lcov
 
       - name: Coveralls

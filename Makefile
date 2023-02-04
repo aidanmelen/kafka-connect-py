@@ -16,7 +16,17 @@ build:  ## Build docker image
 dev:  ## Build docker image
 	docker run -it --rm --entrypoint /bin/sh $(NAME)
 
-release: tests  ## Push tags and trigger Github Actions release.
+lint:  ## Lint python
+	poetry run black --line-length 100 src tests --exclude src/kafka_connect/cli.py
+
+test:  ## Test python
+	poetry run coverage run -m unittest discover tests -v
+
+coverage: test ## Test python
+	poetry run coverage report --include "src/kafka_connect/**" -m
+	poetry run coverage lcov
+
+release: lint test  ## Push tags and trigger Github Actions release.
 	git tag $(VERSION)
 	git push --tags
 
