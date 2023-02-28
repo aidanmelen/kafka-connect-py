@@ -248,10 +248,10 @@ class KafkaConnect:
         response = requests.post(url, auth=self.auth, verify=self.verify, params=params)
 
         if response.status_code == 200:
-            self.logger.info("Connector restarted successfully.")
+            self.logger.info("Connector restarted successfully, but no response body returned.")
             return response.json()
         elif response.status_code == 202:
-            self.logger.info("Connector restart request accepted.")
+            self.logger.info("Connector restart request accepted, but no response body returned.")
             return response.json()
         elif response.status_code == 204:
             self.logger.info("Connector restart request successful, but no response body returned.")
@@ -301,7 +301,7 @@ class KafkaConnect:
         url = f"{self.url}/connectors/{connector}/pause"
         response = requests.put(url, auth=self.auth, verify=self.verify)
         if response.status_code == 202:
-            self.logger.info("Connector pause successful, but no response body returned.")
+            self.logger.info("Connector paused successful, but no response body returned.")
         response.raise_for_status()
         return None
 
@@ -365,7 +365,7 @@ class KafkaConnect:
         url = f"{self.url}/connectors/{connector}"
         response = requests.delete(url, auth=self.auth, verify=self.verify)
         if response.status_code == 204:
-            self.logger.info("Connector resumed successful, but no content returned.")
+            self.logger.info("Connector deleted successful, but no content returned.")
         response.raise_for_status()
         return None
 
