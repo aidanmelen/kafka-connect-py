@@ -206,6 +206,46 @@ class KafkaConnect:
         response.raise_for_status()
         return response.json()
 
+    def stop_connector(self, connector):
+        """Stops the connector.
+        Args:
+            connector (str): The name of the connector.
+        Returns:
+            Dict[str, Any]: The response.
+        """
+        self.logger.info(f"Stopping {connector} connector")
+        url = f"{self.url}/connectors/{connector}/stop"
+        response = requests.put(url, auth=self.auth, verify=self.verify)
+        response.raise_for_status()
+        return 
+
+    def get_offsets(self, connector):
+        """Get the offsets for a single connector.
+        Args:
+            connector (str): The name of the connector.
+        Returns:
+            Dict[str, Any]: The offsets of the connector.
+        """
+        self.logger.info(f"Getting {connector} connector")
+        url = f"{self.url}/connectors/{connector}/offsets"
+        response = requests.get(url, auth=self.auth, verify=self.verify)
+        response.raise_for_status()
+        return response.json()
+
+    def set_offsets(self, connector, offsets):
+        """Get the offsets for a single connector.
+        Args:
+            connector (str): The name of the connector.
+        Returns:
+            Dict[str, Any]: The offsets of the connector.
+        """
+        self.logger.info(f"Getting {connector} connector")
+        url = f"{self.url}/connectors/{connector}/offsets"
+        headers = {"Content-Type": "application/json"}
+        response = requests.patch(url, data = offsets, headers=headers, auth=self.auth, verify=self.verify)
+        response.raise_for_status()
+        return response.json()
+
     def get_connector_config(self, connector):
         """Get the configuration of a single connector.
         Args:
