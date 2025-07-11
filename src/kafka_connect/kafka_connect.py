@@ -354,6 +354,38 @@ class KafkaConnect:
             self.resume_connector(connector)
         return None
 
+    def stop_connector(self, connector):
+        """Stop a single connector.
+        Args:
+            connector (str): The name of the connector.
+        Returns:
+            Dict[str, Any]: The response from the REST API, or an empty dictionary if the response is null or if there is a JSONDecodeError.
+        """
+        self.logger.info(f"Stopping {connector} connector")
+        url = f"{self.url}/connectors/{connector}/stop"
+        response = requests.put(url, auth=self.auth, verify=self.verify)
+        if response.status_code == 202:
+            self.logger.info("Connector stopped successfully, but no response body returned.")
+        response.raise_for_status()
+        return None
+
+    def stop_all_connectors(self, pattern=None, state=None):
+        """Stop all connectors.
+        Args:
+            pattern (str): The regex pattern to match the connector name. Defaults to `None`.
+            state (str): The connector state to match the connectors status. Defaults to `None`.
+        Returns:
+            Dict[str, Dict[str, Any]]: A dictionary of responses, where the keys are the connector names and the values are the responses.
+        """
+        self.logger.info(
+            f"Stopping  all{' ' + state if state else ''} connectors{' matching the pattern: ' + pattern if pattern else ''}"
+        )
+        for connector, status in self.list_connectors(
+            expand="status", pattern=pattern, state=state
+        ).items():
+            self.stop_connector(connector)
+        return None
+
     def delete_connector(self, connector):
         """Delete a single connector.
         Args:
