@@ -370,7 +370,7 @@ class KafkaConnect:
         return None
 
     def stop_all_connectors(self, pattern=None, state=None):
-        """Pause all connectors.
+        """Stop all connectors.
         Args:
             pattern (str): The regex pattern to match the connector name. Defaults to `None`.
             state (str): The connector state to match the connectors status. Defaults to `None`.
