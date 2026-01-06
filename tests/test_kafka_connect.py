@@ -562,6 +562,18 @@ class TestKafkaConnect(unittest.TestCase):
         self.assertEqual(result, None)
 
     @patch("kafka_connect.kafka_connect.requests")
+    def test_stop_connector(self, mock_requests):
+        connector_name = "hdfs-sink-connector"
+        mock_response = mock_requests.put.return_value
+        result = self.kafka_connect.stop_connector(connector_name)
+
+        mock_requests.put.assert_called_with(
+            f"http://localhost:8083/connectors/{connector_name}/stop", auth=None, verify=True
+        )
+        mock_response.raise_for_status.assert_called_with()
+        self.assertEqual(result, None)
+
+    @patch("kafka_connect.kafka_connect.requests")
     def test_delete_connector(self, mock_requests):
         mock_response = mock_requests.delete.return_value
         connector_name = "hdfs-sink-connector"
