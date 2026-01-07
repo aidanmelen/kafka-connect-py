@@ -4,6 +4,7 @@ import json
 import logging
 import re
 import requests
+import waiting
 
 
 class KafkaConnect:
@@ -15,8 +16,10 @@ class KafkaConnect:
         logger (logging.Logger): The logger to be used. If not specified, a new logger will be created.
     """
 
-    def __init__(self, url="http://localhost:8083", auth=None, ssl_verify=True, logger=None):
+    def __init__(self, url="http://localhost:8083", auth=None, ssl_verify=True, logger=None,
+                 kafka_connect_ready_timeout_sec=5):
         self.url = url
+        self.kafka_connect_ready_timeout_sec = kafka_connect_ready_timeout_sec
         self.headers = {"Content-Type": "application/json"}
 
         # Split the auth string into username and password and store them as a tuple
@@ -38,6 +41,25 @@ class KafkaConnect:
         self.verify = ssl_verify
 
         self.logger = logger if logger else logging.getLogger()
+
+    def wait_for_kafka_connect_ready(self):
+        def kafka_connect_ready():
+            try:
+                self.get_cluster_info()
+                return True
+            except Exception:
+                return False
+
+        try:
+            waiting.wait(
+                kafka_connect_ready,
+                timeout_seconds=self.kafka_connect_ready_timeout_sec,
+                sleep_seconds=1,
+                waiting_for="Kafka Connect to serve requests."
+            )
+            self.logger.info("Kafka Connect is ready to serve requests!")
+        except waiting.TimeoutExpired:
+            self.logger.info("Kafka Connect isn't ready!")
 
     def get_cluster_info(self):
         """Get the version and other details of the Kafka Connect cluster.
