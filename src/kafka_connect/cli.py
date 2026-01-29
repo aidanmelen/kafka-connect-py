@@ -157,6 +157,23 @@ def get(kafka_connect, connector):
     response = kafka_connect.get_connector(connector)
     click.echo(json.dumps(response))
 
+@cli.command()
+@click.argument("connector")
+@click.pass_obj
+def offsets(kafka_connect, connector):
+    """Gets the offsets of a connector."""
+    response = kafka_connect.get_offsets(connector)
+    click.echo(json.dumps(response))
+
+@cli.command()
+@click.argument("connector")
+@click.argument("offsets")
+@click.pass_obj
+def set_offsets(kafka_connect, connector, offsets):
+    """Gets the offsets of a connector."""
+    response = kafka_connect.set_offsets(connector, offsets)
+    click.echo(json.dumps(response))
+
 
 @cli.command()
 @click.argument("connector")
@@ -258,6 +275,13 @@ def list_tasks(kafka_connect, connector):
     response = kafka_connect.list_connector_tasks(connector)
     click.echo(json.dumps(response))
 
+
+@cli.command()
+@click.argument("connector")
+@click.pass_obj
+def stop(kafka_connect, connector):
+    """Stopping the connector. """
+    response = kafka_connect.stop_connector(connector)
 
 @cli.command()
 @click.argument("connector")
